@@ -1,19 +1,18 @@
-import { ReactNode, useEffect } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
-import { Toaster, toast } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
+import { Outlet } from 'react-router-dom';
 
 interface LayoutProps {
-  children: ReactNode;
   showFooter?: boolean;
 }
 
-export const Layout = ({ children, showFooter = true }: LayoutProps) => {
+export const Layout = ({ showFooter = true }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
       <Header />
       <main className="flex-1 w-full pt-20">
-        {children}
+        <Outlet />
       </main>
       {showFooter && <Footer />}
       <Toaster
