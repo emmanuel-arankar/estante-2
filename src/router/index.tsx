@@ -1,69 +1,87 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
-import { Home } from '../pages/Home';
-import { Login } from '../pages/Login';
-import { Register } from '../pages/Register';
-import { ForgotPassword } from '../pages/ForgotPassword';
-import { Profile } from '../pages/Profile';
-import { EditProfile } from '../pages/EditProfile';
-import { Messages } from '../pages/Messages';
-import { Chat } from '../pages/Chat';
-import { Friends } from '../pages/Friends';
-import { Notifications } from '../pages/Notifications';
 import { ProtectedRoute } from './ProtectedRoute';
 import { NotFound } from '../pages/NotFound';
+import { LoadingSpinner } from '../components/ui/loading-spinner';
+import { profileLoader, editProfileLoader, notificationsLoader } from './loaders';
+
+// Componente de fallback para usar enquanto as páginas carregam
+const RouteFallback = () => (
+  <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+    <LoadingSpinner size="lg" />
+  </div>
+);
+
+// Todas as páginas agora são importadas dinamicamente (Lazy Loading)
+const Home = lazy(() => import('../pages/Home').then(module => ({ default: module.Home })));
+const Login = lazy(() => import('../pages/Login').then(module => ({ default: module.Login })));
+const Register = lazy(() => import('../pages/Register').then(module => ({ default: module.Register })));
+const ForgotPassword = lazy(() => import('../pages/ForgotPassword').then(module => ({ default: module.ForgotPassword })));
+const Profile = lazy(() => import('../pages/Profile').then(module => ({ default: module.Profile })));
+const EditProfile = lazy(() => import('../pages/EditProfile').then(module => ({ default: module.EditProfile })));
+const Messages = lazy(() => import('../pages/Messages').then(module => ({ default: module.Messages })));
+const Chat = lazy(() => import('../pages/Chat').then(module => ({ default: module.Chat })));
+const Friends = lazy(() => import('../pages/Friends').then(module => ({ default: module.Friends })));
+const Notifications = lazy(() => import('../pages/Notifications').then(module => ({ default: module.Notifications })));
+
+// Função helper para envolver rotas em Suspense e evitar repetição
+const withSuspense = (Component: React.ElementType) => (
+  <Suspense fallback={<RouteFallback />}>
+    <Component />
+  </Suspense>
+);
 
 export const router = createBrowserRouter([
   {
-    // # atualizado: Apenas uma rota pai com o Layout principal
     element: <Layout />,
     errorElement: <NotFound />,
     children: [
       {
         path: '/',
-        element: <Home />,
+        element: withSuspense(Home),
       },
-      // # atualizado: Rotas de autenticação agora usam o Layout principal
-      // (o footer será ocultado pelo próprio Layout)
       {
         path: '/login',
-        element: <Login />,
+        element: withSuspense(Login),
       },
       {
         path: '/register',
-        element: <Register />,
+        element: withSuspense(Register),
       },
       {
         path: '/forgot-password',
-        element: <ForgotPassword />,
+        element: withSuspense(ForgotPassword),
       },
       {
         path: '/profile/:nickname',
-        element: <Profile />,
+        element: withSuspense(Profile),
+        loader: profileLoader,
       },
       {
         path: '/friends',
-        element: <Friends />,
+        element: withSuspense(Friends),
       },
       {
         path: '/notifications',
-        element: <Notifications />,
+        element: withSuspense(Notifications),
+        loader: notificationsLoader,
       },
-      // # atualizado: Rotas protegidas continuam agrupadas
       {
         element: <ProtectedRoute />,
         children: [
           {
             path: '/profile/edit',
-            element: <EditProfile />,
+            element: withSuspense(EditProfile),
+            loader: editProfileLoader,
           },
           {
             path: '/messages',
-            element: <Messages />,
+            element: withSuspense(Messages),
           },
           {
             path: '/chat/:receiverId',
-            element: <Chat />,
+            element: withSuspense(Chat),
           },
         ],
       },
