@@ -10,20 +10,32 @@ import { Messages } from '../pages/Messages';
 import { Chat } from '../pages/Chat';
 import { Friends } from '../pages/Friends';
 import { Notifications } from '../pages/Notifications';
+import { ProtectedRoute } from './ProtectedRoute';
 import { NotFound } from '../pages/NotFound';
 
-import { ProtectedRoute } from './ProtectedRoute';
-import { AuthLayout } from './AuthLayout';
-
 export const router = createBrowserRouter([
-  // # atualizado: Rotas com o layout principal (Header e Footer)
   {
+    // # atualizado: Apenas uma rota pai com o Layout principal
     element: <Layout />,
     errorElement: <NotFound />,
     children: [
       {
         path: '/',
         element: <Home />,
+      },
+      // # atualizado: Rotas de autenticação agora usam o Layout principal
+      // (o footer será ocultado pelo próprio Layout)
+      {
+        path: '/login',
+        element: <Login />,
+      },
+      {
+        path: '/register',
+        element: <Register />,
+      },
+      {
+        path: '/forgot-password',
+        element: <ForgotPassword />,
       },
       {
         path: '/profile/:nickname',
@@ -37,7 +49,7 @@ export const router = createBrowserRouter([
         path: '/notifications',
         element: <Notifications />,
       },
-      // # atualizado: Agrupamento de rotas protegidas
+      // # atualizado: Rotas protegidas continuam agrupadas
       {
         element: <ProtectedRoute />,
         children: [
@@ -57,25 +69,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  // # atualizado: Rotas com o layout de autenticação (tela cheia, sem Header/Footer)
-  {
-    element: <AuthLayout />,
-    children: [
-      {
-        path: '/login',
-        element: <Login />,
-      },
-      {
-        path: '/register',
-        element: <Register />,
-      },
-      {
-        path: '/forgot-password',
-        element: <ForgotPassword />,
-      },
-    ],
-  },
-  // # atualizado: Rota "catch-all" para páginas não encontradas
   {
     path: '*',
     element: <NotFound />,

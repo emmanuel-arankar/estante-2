@@ -12,12 +12,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useImageLoad } from '../../hooks/useImageLoad';
 import { getFriendRequests, subscribeToFriendRequests } from '../../services/firestore';
 
+{/*
 const navigationItems = [
-  // { href: '/', label: 'Início' },
-  // { href: '/explorar', label: 'Explorar' },
-  // { href: '/colecoes', label: 'Coleções' },
-  // { href: '/comunidade', label: 'Comunidade' },
+  { href: '/', label: 'Início' },
+  { href: '/explorar', label: 'Explorar' },
+  { href: '/colecoes', label: 'Coleções' },
+  { href: '/comunidade', label: 'Comunidade' },
 ];
+*/}
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,7 +29,6 @@ export const Header = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [friendRequestsCount, setFriendRequestsCount] = useState(0);
   
-  // Verificação para o carregamento do avatar
   const { isLoaded: isAvatarLoaded } = useImageLoad(profile?.photoURL);
 
   useEffect(() => {
@@ -37,11 +38,9 @@ export const Header = () => {
 
     const setupFriendRequestsListener = async () => {
       try {
-        // Carrega o contador inicial
         const initialRequests = await getFriendRequests(user.uid);
         setFriendRequestsCount(initialRequests.length);
 
-        // Configura o listener para atualizações em tempo real
         unsubscribe = subscribeToFriendRequests(user.uid, (requests) => {
           setFriendRequestsCount(requests.length);
         });
@@ -80,7 +79,6 @@ export const Header = () => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
             <div className="bg-emerald-600 p-2.5 rounded-xl shadow-lg"> 
               <BookOpen className="h-7 w-7 text-white" />
@@ -91,9 +89,8 @@ export const Header = () => {
             </div>
           </Link>
 
-          {/* Navigation - Desktop */}
           <nav className="hidden lg:flex items-center space-x-8">
-            {navigationItems.map((item) => (
+            {/* navigationItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
@@ -101,105 +98,104 @@ export const Header = () => {
               >
                 {item.label}
               </Link>
-            ))}
+            )) */}
           </nav>
 
-          {/* Search Bar - Desktop */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Buscar livros, autores, editoras ou usuários..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-emerald-500 rounded-full font-sans"
-              />
-            </div>
-          </form>
-
-          {/* Desktop Actions */}
           {user ? (
-            <div className="hidden md:flex items-center space-x-4">
-              <Button variant="ghost" size="icon" asChild className="relative rounded-full">
-                <Link to="/notifications">
-                  <Bell className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Button variant="ghost" size="icon" asChild className="relative rounded-full">
-                <Link to="/messages">
-                  <MessageCircle className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Button variant="ghost" size="icon" asChild className="relative rounded-full">
-                <Link to="/friends">
-                  <Users className="h-5 w-5" />
-                  {friendRequestsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {friendRequestsCount > 99 ? '+99' : friendRequestsCount}
-                    </span>
-                  )}
-                </Link>
-              </Button>
-              
-              {/* User Menu Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    {isAvatarLoaded ? (
+            <>
+              <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Buscar livros, autores, editoras ou usuários..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 py-2 w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-emerald-500 rounded-full font-sans"
+                  />
+                </div>
+              </form>
+
+              <div className="hidden md:flex items-center space-x-4">
+                <Button variant="ghost" size="icon" asChild className="relative rounded-full">
+                  <Link to="/notifications">
+                    <Bell className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="icon" asChild className="relative rounded-full">
+                  <Link to="/messages">
+                    <MessageCircle className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="icon" asChild className="relative rounded-full">
+                  <Link to="/friends">
+                    <Users className="h-5 w-5" />
+                    {friendRequestsCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {friendRequestsCount > 99 ? '+99' : friendRequestsCount}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                      {isAvatarLoaded ? (
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={profile?.photoURL} alt={profile?.displayName} />
+                          <AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">
+                            {profile?.displayName?.charAt(0) || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                          <LoadingSpinner size="sm" />
+                        </div>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="flex items-center space-x-2 p-2">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={profile?.photoURL} alt={profile?.displayName} />
                         <AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">
                           {profile?.displayName?.charAt(0) || 'U'}
                         </AvatarFallback>
                       </Avatar>
-                    ) : (
-                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                        <LoadingSpinner size="sm" />
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{profile?.displayName}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          @{profile?.nickname}
+                        </p>
                       </div>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="flex items-center space-x-2 p-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile?.photoURL} alt={profile?.displayName} />
-                      <AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">
-                        {profile?.displayName?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{profile?.displayName}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        @{profile?.nickname}
-                      </p>
                     </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile/me" className="cursor-pointer">
-                      <UserCircle className="mr-2 h-4 w-4" />
-                      <span>Meu Perfil</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile/edit" className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Configurações</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="cursor-pointer text-red-600 focus:text-red-600"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile/me" className="cursor-pointer">
+                        <UserCircle className="mr-2 h-4 w-4" />
+                        <span>Meu Perfil</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile/edit" className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Configurações</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="cursor-pointer text-red-600 focus:text-red-600"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </>
           ) : (
             <div className="hidden md:flex items-center space-x-4">
               <Button variant="ghost" asChild className="text-gray-600 hover:text-emerald-600 rounded-full font-sans">
@@ -211,7 +207,6 @@ export const Header = () => {
             </div>
           )}
 
-          {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="icon"
@@ -222,22 +217,22 @@ export const Header = () => {
           </Button>
         </div>
 
-        {/* Mobile Search */}
-        <form onSubmit={handleSearch} className="md:hidden pb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Buscar livros, autores ou usuários..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-emerald-500 rounded-full font-sans"
-            />
-          </div>
-        </form>
+        {user && (
+          <form onSubmit={handleSearch} className="md:hidden pb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Buscar livros, autores ou usuários..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-emerald-500 rounded-full font-sans"
+              />
+            </div>
+          </form>
+        )}
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
@@ -247,9 +242,8 @@ export const Header = () => {
             className="md:hidden bg-white border-t border-gray-200"
           >
             <div className="max-w-7xl mx-auto px-4 py-4">
-              {/* Navigation Links */}
               <div className="space-y-2 mb-4">
-                {navigationItems.map((item) => (
+                {/* navigationItems.map((item) => (
                   <Link
                     key={item.href}
                     to={item.href}
@@ -258,7 +252,7 @@ export const Header = () => {
                   >
                     {item.label}
                   </Link>
-                ))}
+                )) */}
               </div>
 
               {user ? (
