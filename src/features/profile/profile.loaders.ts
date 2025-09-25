@@ -10,7 +10,7 @@ export const profileLoader = async ({ params }: any) => {
   if (!nickname) return redirect('/');
 
   if (nickname === 'me') {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser(); // agora aguarda
     if (!user) return redirect('/login');
     return await queryClient.ensureQueryData(userQuery(user.uid));
   }
@@ -24,7 +24,7 @@ export const profileLoader = async ({ params }: any) => {
 };
 
 export const editProfileLoader = async () => {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(); // agora aguarda
   if (!user) return redirect('/login');
   return await queryClient.ensureQueryData(userQuery(user.uid));
 };
