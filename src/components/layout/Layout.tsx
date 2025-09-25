@@ -1,4 +1,3 @@
-// # atualizado: src/components/layout/Layout.tsx
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Toaster } from 'react-hot-toast';
@@ -13,13 +12,13 @@ interface LayoutData {
 export const Layout = () => {
   const { initialFriendRequests } = useLoaderData() as LayoutData;
   const location = useLocation();
-  const { loading: authLoading } = useAuth(); // Usamos o loading do nosso hook de autenticação
+  const { loading: authLoading } = useAuth(); // # atualizado
 
   const noFooterRoutes = ['/login', '/register', '/forgot-password'];
   const shouldShowFooter = !noFooterRoutes.includes(location.pathname);
 
-  // # atualizado: A tela de carregamento global agora vive aqui.
-  // Isso impede que o RouterProvider seja desmontado e resolve a condição de corrida.
+  // # atualizado: O spinner de carregamento inicial da aplicação agora vive aqui.
+  // Isso garante que o roteador não seja desmontado, corrigindo o bug de redirecionamento.
   if (authLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-50/50 backdrop-blur-sm z-50">

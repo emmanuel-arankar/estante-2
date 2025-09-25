@@ -1,10 +1,17 @@
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
+import { useAuth } from './hooks/useAuth';
+import { LoadingSpinner } from './components/ui/loading-spinner';
 
-// Este componente agora tem a única responsabilidade de renderizar
-// o RouterProvider, garantindo que ele nunca seja desmontado.
-// Isso corrige o bug de redirecionamento após o login.
 function App() {
+  // # atualizado: O hook useAuth é chamado aqui para iniciar a verificação de auth.
+  // A lógica de carregamento será movida para o Layout.
+  useAuth();
+
+  // # atualizado: O RouterProvider foi movido para main.tsx.
+  // O componente App agora pode ser simplificado ou removido,
+  // mas por enquanto vamos mantê-lo para conter a lógica do useAuth.
+  // A renderização real acontecerá através da configuração do router.
   return <RouterProvider router={router} />;
 }
 
