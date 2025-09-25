@@ -1,24 +1,38 @@
+// # atualizado: src/components/layout/Layout.tsx
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Toaster } from 'react-hot-toast';
 import { Outlet, useLoaderData, useLocation } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import { LoadingSpinner } from '../ui/loading-spinner';
 
-// # atualizado: Interface para garantir a tipagem dos dados do loader
 interface LayoutData {
   initialFriendRequests: number;
 }
 
 export const Layout = () => {
-  // # atualizado: Obtém os dados que o loader forneceu
   const { initialFriendRequests } = useLoaderData() as LayoutData;
   const location = useLocation();
-  
+  const { loading: authLoading } = useAuth(); // Usamos o loading do nosso hook de autenticação
+
   const noFooterRoutes = ['/login', '/register', '/forgot-password'];
   const shouldShowFooter = !noFooterRoutes.includes(location.pathname);
 
+  // # atualizado: A tela de carregamento global agora vive aqui.
+  // Isso impede que o RouterProvider seja desmontado e resolve a condição de corrida.
+  if (authLoading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-50/50 backdrop-blur-sm z-50">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <LoadingSpinner size="lg" />
+          <p className="text-lg text-gray-600 font-medium">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
-      {/* # atualizado: Passa os dados pré-carregados como props para o Header */}
       <Header initialFriendRequests={initialFriendRequests} />
       <main className="flex-1 w-full pt-20">
         <Outlet />

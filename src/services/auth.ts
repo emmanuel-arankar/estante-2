@@ -1,4 +1,4 @@
-import { signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'; // atualizado
+import { signOut } from 'firebase/auth';
 import { auth } from './firebase';
 import { useAuthStore } from '../stores/authStore';
 import {
@@ -7,26 +7,6 @@ import {
 } from '@/components/ui/toast';
 import { queryClient } from '@/lib/queryClient';
 
-// # atualizado: Criamos uma Promise que resolve com o usuário (ou null)
-let authInitialized = false;
-const authPromise = new Promise<{ user: FirebaseUser | null }>((resolve) => {
-  if (authInitialized) {
-    resolve({ user: auth.currentUser });
-    return;
-  }
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    authInitialized = true;
-    resolve({ user });
-    unsubscribe();
-  });
-});
-
-// # atualizado: Esta função agora é assíncrona e aguarda a inicialização
-export const getCurrentUser = async (): Promise<FirebaseUser | null> => {
-  const { user } = await authPromise;
-  return user;
-};
-
 export const logout = async () => {
   try {
     console.log('🚪 Iniciando logout...');
@@ -34,8 +14,6 @@ export const logout = async () => {
     queryClient.clear();
 
     await signOut(auth);
-    // # atualizado: Resetamos a "sentinela" para o próximo login
-    authInitialized = false;
 
     console.log('✅ Logout realizado com sucesso');
     toastSuccessClickable('Logout realizado com sucesso!');
@@ -47,7 +25,11 @@ export const logout = async () => {
   }
 };
 
-export const isAuthenticated = async (): Promise<boolean> => { // atualizado
-  const user = await getCurrentUser();
-  return !!user;
+// # atualizado: Funções voltam a ser síncronas e simples.
+export const getCurrentUser = () => {
+  return auth.currentUser;
+};
+
+export const isAuthenticated = () => {
+  return !!auth.currentUser;
 };

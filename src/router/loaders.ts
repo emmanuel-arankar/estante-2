@@ -1,11 +1,13 @@
+import { auth } from '../services/firebase';
 import { getPendingRequestCount } from '../services/firestore';
-import { getCurrentUser } from '../services/auth'; // atualizado
 
-export { getCurrentUser }; // Re-exportar para outros loaders
+// # atualizado: A função volta a ser síncrona para compatibilidade.
+export const getCurrentUser = () => {
+  return auth.currentUser;
+};
 
-// # atualizado: O loader principal agora é assíncrono
 export const layoutLoader = async () => {
-  const user = await getCurrentUser(); // Espera a autenticação
+  const user = getCurrentUser();
   if (!user) {
     return { initialFriendRequests: 0 };
   }
