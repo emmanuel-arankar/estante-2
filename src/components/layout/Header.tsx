@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, MessageCircle, User, BookOpen, Menu, X, LogOut, Settings, UserCircle, Users } from 'lucide-react';
+import { Search, Bell, MessageCircle, BookOpen, Menu, X, LogOut, Settings, UserCircle, Users } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,19 +11,13 @@ import { logout } from '../../services/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useImageLoad } from '../../hooks/useImageLoad';
 import { getFriendRequests, subscribeToFriendRequests } from '../../services/firestore';
+import { User } from '../../models';
 
-{/*
-const navigationItems = [
-  { href: '/', label: 'Início' },
-  { href: '/explorar', label: 'Explorar' },
-  { href: '/colecoes', label: 'Coleções' },
-  { href: '/comunidade', label: 'Comunidade' },
-];
-*/}
-
+// # atualizado: Header não recebe mais props
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  // # atualizado: Obtendo profile diretamente do hook reativo
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -32,24 +26,22 @@ export const Header = () => {
   const { isLoaded: isAvatarLoaded } = useImageLoad(profile?.photoURL);
 
   useEffect(() => {
-    if (!user?.uid) return;
+    if (!user?.uid) {
+        setFriendRequestsCount(0);
+        return;
+    };
     
     let unsubscribe: () => void;
 
-    const setupFriendRequestsListener = async () => {
-      try {
+    const setupListener = async () => {
         const initialRequests = await getFriendRequests(user.uid);
         setFriendRequestsCount(initialRequests.length);
-
+        
         unsubscribe = subscribeToFriendRequests(user.uid, (requests) => {
           setFriendRequestsCount(requests.length);
         });
-      } catch (error) {
-        console.error('Erro ao configurar listener de solicitações:', error);
-      }
-    };
-    
-    setupFriendRequestsListener();
+    }
+    setupListener();
     
     return () => {
       if (unsubscribe) unsubscribe();
@@ -89,43 +81,21 @@ export const Header = () => {
             </div>
           </Link>
 
-          <nav className="hidden lg:flex items-center space-x-8">
-            {/* navigationItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="text-gray-600 hover:text-emerald-600 font-medium transition-colors font-sans"
-              >
-                {item.label}
-              </Link>
-            )) */}
-          </nav>
-
-          {user ? (
+          {user && profile ? (
             <>
               <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="text"
-                    placeholder="Buscar livros, autores, editoras ou usuários..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-emerald-500 rounded-full font-sans"
-                  />
+                  <Input type="text" placeholder="Buscar livros, autores, editoras ou usuários..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-emerald-500 rounded-full font-sans"/>
                 </div>
               </form>
 
               <div className="hidden md:flex items-center space-x-4">
                 <Button variant="ghost" size="icon" asChild className="relative rounded-full">
-                  <Link to="/notifications">
-                    <Bell className="h-5 w-5" />
-                  </Link>
+                  <Link to="/notifications"><Bell className="h-5 w-5" /></Link>
                 </Button>
                 <Button variant="ghost" size="icon" asChild className="relative rounded-full">
-                  <Link to="/messages">
-                    <MessageCircle className="h-5 w-5" />
-                  </Link>
+                  <Link to="/messages"><MessageCircle className="h-5 w-5" /></Link>
                 </Button>
                 <Button variant="ghost" size="icon" asChild className="relative rounded-full">
                   <Link to="/friends">
@@ -157,62 +127,26 @@ export const Header = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="flex items-center space-x-2 p-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={profile?.photoURL} alt={profile?.displayName} />
-                        <AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">
-                          {profile?.displayName?.charAt(0) || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{profile?.displayName}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          @{profile?.nickname}
-                        </p>
-                      </div>
+                        <Avatar className="h-8 w-8"><AvatarImage src={profile?.photoURL} alt={profile?.displayName} /><AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">{profile?.displayName?.charAt(0) || 'U'}</AvatarFallback></Avatar>
+                        <div className="flex flex-col space-y-1"><p className="text-sm font-medium leading-none">{profile?.displayName}</p><p className="text-xs leading-none text-muted-foreground">@{profile?.nickname}</p></div>
                     </div>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile/me" className="cursor-pointer">
-                        <UserCircle className="mr-2 h-4 w-4" />
-                        <span>Meu Perfil</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile/edit" className="cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Configurações</span>
-                      </Link>
-                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/profile/me" className="cursor-pointer"><UserCircle className="mr-2 h-4 w-4" /><span>Meu Perfil</span></Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/profile/edit" className="cursor-pointer"><Settings className="mr-2 h-4 w-4" /><span>Configurações</span></Link></DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={handleLogout}
-                      disabled={isLoggingOut}
-                      className="cursor-pointer text-red-600 focus:text-red-600"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut} className="cursor-pointer text-red-600 focus:text-red-600"><LogOut className="mr-2 h-4 w-4" /><span>{isLoggingOut ? 'Saindo...' : 'Sair'}</span></DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             </>
           ) : (
             <div className="hidden md:flex items-center space-x-4">
-              <Button variant="ghost" asChild className="text-gray-600 hover:text-emerald-600 rounded-full font-sans">
-                <Link to="/login">Entrar</Link>
-              </Button>
-              <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6 font-sans">
-                <Link to="/register">Cadastrar</Link>
-              </Button>
+              <Button variant="ghost" asChild className="text-gray-600 hover:text-emerald-600 rounded-full font-sans"><Link to="/login">Entrar</Link></Button>
+              <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6 font-sans"><Link to="/register">Cadastrar</Link></Button>
             </div>
           )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden rounded-full"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
+          <Button variant="ghost" size="icon" className="md:hidden rounded-full" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
@@ -231,114 +165,47 @@ export const Header = () => {
             </div>
           </form>
         )}
-      </div>
 
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-t border-gray-200"
-          >
-            <div className="max-w-7xl mx-auto px-4 py-4">
-              <div className="space-y-2 mb-4">
-                {/* navigationItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className="block py-2 px-3 text-gray-600 hover:text-emerald-600 hover:bg-gray-50 rounded-lg transition-colors font-sans"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                )) */}
-              </div>
-
-              {user ? (
-                <div className="flex flex-col space-y-4 pt-4 border-t border-gray-100">
-                  {isAvatarLoaded && (
-                    <Link
-                      to="/profile/me"
-                      className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={profile?.photoURL} alt={profile?.displayName} />
-                        <AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">
-                          {profile?.displayName?.charAt(0) || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-white border-t border-gray-200"
+            >
+              <div className="max-w-7xl mx-auto px-4 py-4">
+                {user && profile ? (
+                  <div className="flex flex-col space-y-4 pt-4 border-t border-gray-100">
+                    <Link to="/profile/me" className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}>
+                      <Avatar className="h-8 w-8"><AvatarImage src={profile?.photoURL} alt={profile?.displayName} /><AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">{profile?.displayName?.charAt(0) || 'U'}</AvatarFallback></Avatar>
                       <span className="font-sans">{profile?.displayName}</span>
                     </Link>
-                  )}
-                  
-                  <Link
-                    to="/profile/edit"
-                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Settings className="h-5 w-5" />
-                    <span className="font-sans">Configurações</span>
-                  </Link>
-                  
-                  <Link
-                    to="/notifications"
-                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Bell className="h-5 w-5" />
-                    <span className="font-sans">Notificações</span>
-                  </Link>
-                  <Link
-                    to="/messages"
-                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    <span className="font-sans">Mensagens</span>
-                  </Link>
-                  <Link
-                    to="/friends"
-                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 relative"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Users className="h-5 w-5" />
-                    <span className="font-sans">Amigos</span>
-                    {friendRequestsCount > 0 && (
-                      <span className="absolute right-4 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        {friendRequestsCount > 9 ? '9+' : friendRequestsCount}
-                      </span>
-                    )}
-                  </Link>
-                  
-                  <button
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 w-full text-left text-red-600 hover:text-red-700"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    <span className="font-sans">{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col space-y-4 pt-4 border-t border-gray-100">
-                  <Button variant="ghost" asChild className="rounded-full font-sans">
-                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                      Entrar
+                    <Link to="/profile/edit" className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}><Settings className="h-5 w-5" /><span className="font-sans">Configurações</span></Link>
+                    <Link to="/notifications" className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}><Bell className="h-5 w-5" /><span className="font-sans">Notificações</span></Link>
+                    <Link to="/messages" className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}><MessageCircle className="h-5 w-5" /><span className="font-sans">Mensagens</span></Link>
+                    <Link to="/friends" className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 relative" onClick={() => setIsMenuOpen(false)}>
+                      <Users className="h-5 w-5" />
+                      <span className="font-sans">Amigos</span>
+                      {friendRequestsCount > 0 && (
+                        <span className="absolute right-4 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{friendRequestsCount > 9 ? '9+' : friendRequestsCount}</span>
+                      )}
                     </Link>
-                  </Button>
-                  <Button asChild className="bg-emerald-600 hover:bg-emerald-700 rounded-full font-sans">
-                    <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                      Cadastrar
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                    <button onClick={handleLogout} disabled={isLoggingOut} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 w-full text-left text-red-600 hover:text-red-700">
+                      <LogOut className="h-5 w-5" /><span className="font-sans">{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-4 pt-4 border-t border-gray-100">
+                    <Button variant="ghost" asChild className="rounded-full font-sans"><Link to="/login" onClick={() => setIsMenuOpen(false)}>Entrar</Link></Button>
+                    <Button asChild className="bg-emerald-600 hover:bg-emerald-700 rounded-full font-sans"><Link to="/register" onClick={() => setIsMenuOpen(false)}>Cadastrar</Link></Button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </header>
   );
 };

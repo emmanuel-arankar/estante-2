@@ -5,6 +5,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 import { NotFound } from '../pages/NotFound';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
 import { profileLoader, editProfileLoader, notificationsLoader } from './loaders';
+import { loginAction, registerAction, editProfileAction } from './actions'; 
 
 // Componente de fallback para usar enquanto as páginas carregam
 const RouteFallback = () => (
@@ -44,10 +45,12 @@ export const router = createBrowserRouter([
       {
         path: '/login',
         element: withSuspense(Login),
+        action: loginAction, // # atualizado
       },
       {
         path: '/register',
         element: withSuspense(Register),
+        action: registerAction, // # atualizado
       },
       {
         path: '/forgot-password',
@@ -74,6 +77,7 @@ export const router = createBrowserRouter([
             path: '/profile/edit',
             element: withSuspense(EditProfile),
             loader: editProfileLoader,
+            action: editProfileAction, // # atualizado
           },
           {
             path: '/messages',

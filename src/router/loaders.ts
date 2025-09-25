@@ -1,68 +1,71 @@
 import { redirect } from 'react-router-dom';
 import { auth, db } from '../services/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { getUserNotifications } from '../services/firestore';
+import { getUserNotifications, getPendingRequestCount } from '../services/firestore'; 
 import { toastErrorClickable } from '@/components/ui/toast';
+import { queryClient } from '../lib/queryClient'; // # atualizado
 
 // Helper para pegar o usuário atual, essencial para loaders
 const getCurrentUser = () => {
   return auth.currentUser;
 };
 
-// Loader para a página de perfil
+const userQuery = (userId: string) => ({
+  queryKey: ['users', userId],
+  queryFn: async () => {
+    const docRef = doc(db, 'users', userId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      throw new Response('Not Found', { status: 404 });
+    }
+    return { id: docSnap.id, ...docSnap.data() };
+  },
+});
+
+const userByNicknameQuery = (nickname: string) => ({
+    queryKey: ['users', 'nickname', nickname],
+    queryFn: async () => {
+        const q = query(collection(db, 'users'), where('nickname', '==', nickname));
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+            throw new Response('Not Found', { status: 404, statusText: 'Usuário não encontrado' });
+        }
+        const userDoc = snapshot.docs[0];
+        return { id: userDoc.id, ...userDoc.data() };
+    },
+});
+
+const notificationsQuery = (userId: string) => ({
+    queryKey: ['notifications', userId],
+    queryFn: () => getUserNotifications(userId),
+});
+
 export const profileLoader = async ({ params }: any) => {
   const { nickname } = params;
-  if (!nickname) {
-    toastErrorClickable('Nickname não fornecido.');
-    return redirect('/');
-  }
+  if (!nickname) return redirect('/');
 
-  // Lógica para a rota /profile/me
   if (nickname === 'me') {
     const user = getCurrentUser();
-    if (!user) {
-      return redirect('/login');
-    }
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    if (userDoc.exists()) {
-      return { id: userDoc.id, ...userDoc.data() };
-    }
-    return redirect('/');
+    if (!user) return redirect('/login');
+    return await queryClient.ensureQueryData(userQuery(user.uid));
   }
 
-  // Busca o perfil pelo nickname
-  const q = query(collection(db, 'users'), where('nickname', '==', nickname));
-  const snapshot = await getDocs(q);
-
-  if (snapshot.empty) {
+  try {
+    return await queryClient.ensureQueryData(userByNicknameQuery(nickname));
+  } catch (error) {
     toastErrorClickable('Usuário não encontrado.');
     return redirect('/');
   }
-
-  const userDoc = snapshot.docs[0];
-  return { id: userDoc.id, ...userDoc.data() };
 };
 
-// Loader para a página de edição de perfil
 export const editProfileLoader = async () => {
   const user = getCurrentUser();
-  if (!user) {
-    return redirect('/login');
-  }
-  const userDoc = await getDoc(doc(db, 'users', user.uid));
-  if (userDoc.exists()) {
-    return { id: userDoc.id, ...userDoc.data() };
-  }
-  toastErrorClickable('Perfil não encontrado para edição.');
-  return redirect('/');
+  if (!user) return redirect('/login');
+  return await queryClient.ensureQueryData(userQuery(user.uid));
 };
 
-// Loader para a página de notificações
 export const notificationsLoader = async () => {
   const user = getCurrentUser();
-  if (!user) {
-    return redirect('/login');
-  }
-  const notifications = await getUserNotifications(user.uid);
-  return notifications;
+  if (!user) return redirect('/login');
+  return await queryClient.ensureQueryData(notificationsQuery(user.uid));
 };
