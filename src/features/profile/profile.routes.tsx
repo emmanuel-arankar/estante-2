@@ -1,24 +1,11 @@
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react'; // # atualizado
 import { RouteObject } from 'react-router-dom';
-import { LoadingSpinner } from '../../components/ui/loading-spinner';
 import { profileLoader, editProfileLoader } from '../../router/loaders';
 import { editProfileAction } from '../../router/actions';
 import { ProtectedRoute } from '../../router/ProtectedRoute';
+import { withSuspense } from '../../router/RouteSuspense'; // # atualizado
 
-// Helper para suspense fallback
-const RouteFallback = () => (
-  <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
-    <LoadingSpinner size="lg" />
-  </div>
-);
-
-const withSuspense = (Component: React.ElementType) => (
-  <Suspense fallback={<RouteFallback />}>
-    <Component />
-  </Suspense>
-);
-
-// Componentes lazy
+// # atualizado: Lógica de suspense removida daqui
 const Profile = lazy(() => import('../../pages/Profile').then(module => ({ default: module.Profile })));
 const EditProfile = lazy(() => import('../../pages/EditProfile').then(module => ({ default: module.EditProfile })));
 
