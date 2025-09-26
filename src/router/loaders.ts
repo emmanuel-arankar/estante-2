@@ -1,11 +1,10 @@
 import { redirect } from 'react-router-dom';
 import { auth, db } from '../services/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { getUserNotifications, getPendingRequestCount } from '../services/firestore'; 
+import { getUserNotifications, getPendingRequestCount } from '../services/firestore';
 import { toastErrorClickable } from '@/components/ui/toast';
-import { queryClient } from '../lib/queryClient'; // # atualizado
+import { queryClient } from '../lib/queryClient';
 
-// Helper para pegar o usuário atual, essencial para loaders
 const getCurrentUser = () => {
   return auth.currentUser;
 };
@@ -22,13 +21,31 @@ const userQuery = (userId: string) => ({
   },
 });
 
+// # atualizado: Loader para a rota principal (Layout)
+export const layoutLoader = async () => {
+  const user = getCurrentUser();
+  if (!user) {
+    return { profile: null, initialFriendRequests: 0 };
+  }
+  try {
+    const [profile, initialFriendRequests] = await Promise.all([
+      queryClient.ensureQueryData(userQuery(user.uid)),
+      getPendingRequestCount(user.uid)
+    ]);
+    return { profile, initialFriendRequests };
+  } catch (error) {
+    console.error("Layout loader error:", error);
+    return { profile: null, initialFriendRequests: 0 };
+  }
+};
+
 const userByNicknameQuery = (nickname: string) => ({
     queryKey: ['users', 'nickname', nickname],
     queryFn: async () => {
         const q = query(collection(db, 'users'), where('nickname', '==', nickname));
         const snapshot = await getDocs(q);
         if (snapshot.empty) {
-            throw new Response('Not Found', { status: 404, statusText: 'Usuário não encontrado' });
+            throw new Response('Not Found', { status: 404, statusText: 'User not found' });
         }
         const userDoc = snapshot.docs[0];
         return { id: userDoc.id, ...userDoc.data() };

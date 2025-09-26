@@ -10,44 +10,42 @@ import { useAuth } from '../../hooks/useAuth';
 import { logout } from '../../services/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useImageLoad } from '../../hooks/useImageLoad';
-import { getFriendRequests, subscribeToFriendRequests } from '../../services/firestore';
+import { subscribeToFriendRequests } from '../../services/firestore';
 import { User } from '../../models';
 
-// # atualizado: Header não recebe mais props
-export const Header = () => {
+// # atualizado: O componente agora espera receber dados via props
+interface HeaderProps {
+  profile: User | null;
+  initialFriendRequests: number;
+}
+
+export const Header = ({ profile, initialFriendRequests }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  // # atualizado: Obtendo profile diretamente do hook reativo
-  const { user, profile } = useAuth();
+  const { user } = useAuth(); // Mantido para saber se existe uma sessão de autenticação ativa
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [friendRequestsCount, setFriendRequestsCount] = useState(0);
+  const [friendRequestsCount, setFriendRequestsCount] = useState(initialFriendRequests);
   
   const { isLoaded: isAvatarLoaded } = useImageLoad(profile?.photoURL);
 
   useEffect(() => {
+    // Se o usuário deslogar, reseta a contagem
     if (!user?.uid) {
         setFriendRequestsCount(0);
         return;
     };
     
-    let unsubscribe: () => void;
-
-    const setupListener = async () => {
-        const initialRequests = await getFriendRequests(user.uid);
-        setFriendRequestsCount(initialRequests.length);
-        
-        unsubscribe = subscribeToFriendRequests(user.uid, (requests) => {
-          setFriendRequestsCount(requests.length);
-        });
-    }
-    setupListener();
+    // O valor inicial foi definido pelo loader. Agora, apenas ouvimos por mudanças em tempo real.
+    const unsubscribe = subscribeToFriendRequests(user.uid, (requests) => {
+      setFriendRequestsCount(requests.length);
+    });
     
     return () => {
       if (unsubscribe) unsubscribe();
     };
   }, [user?.uid]);
-
+  
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -150,61 +148,6 @@ export const Header = () => {
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
-
-        {user && (
-          <form onSubmit={handleSearch} className="md:hidden pb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Buscar livros, autores ou usuários..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-emerald-500 rounded-full font-sans"
-              />
-            </div>
-          </form>
-        )}
-
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white border-t border-gray-200"
-            >
-              <div className="max-w-7xl mx-auto px-4 py-4">
-                {user && profile ? (
-                  <div className="flex flex-col space-y-4 pt-4 border-t border-gray-100">
-                    <Link to="/profile/me" className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}>
-                      <Avatar className="h-8 w-8"><AvatarImage src={profile?.photoURL} alt={profile?.displayName} /><AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">{profile?.displayName?.charAt(0) || 'U'}</AvatarFallback></Avatar>
-                      <span className="font-sans">{profile?.displayName}</span>
-                    </Link>
-                    <Link to="/profile/edit" className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}><Settings className="h-5 w-5" /><span className="font-sans">Configurações</span></Link>
-                    <Link to="/notifications" className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}><Bell className="h-5 w-5" /><span className="font-sans">Notificações</span></Link>
-                    <Link to="/messages" className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50" onClick={() => setIsMenuOpen(false)}><MessageCircle className="h-5 w-5" /><span className="font-sans">Mensagens</span></Link>
-                    <Link to="/friends" className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 relative" onClick={() => setIsMenuOpen(false)}>
-                      <Users className="h-5 w-5" />
-                      <span className="font-sans">Amigos</span>
-                      {friendRequestsCount > 0 && (
-                        <span className="absolute right-4 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{friendRequestsCount > 9 ? '9+' : friendRequestsCount}</span>
-                      )}
-                    </Link>
-                    <button onClick={handleLogout} disabled={isLoggingOut} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 w-full text-left text-red-600 hover:text-red-700">
-                      <LogOut className="h-5 w-5" /><span className="font-sans">{isLoggingOut ? 'Saindo...' : 'Sair'}</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-4 pt-4 border-t border-gray-100">
-                    <Button variant="ghost" asChild className="rounded-full font-sans"><Link to="/login" onClick={() => setIsMenuOpen(false)}>Entrar</Link></Button>
-                    <Button asChild className="bg-emerald-600 hover:bg-emerald-700 rounded-full font-sans"><Link to="/register" onClick={() => setIsMenuOpen(false)}>Cadastrar</Link></Button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </header>
   );

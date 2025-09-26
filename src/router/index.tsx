@@ -4,7 +4,8 @@ import { Layout } from '../components/layout/Layout';
 import { ProtectedRoute } from './ProtectedRoute';
 import { NotFound } from '../pages/NotFound';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
-import { profileLoader, editProfileLoader, notificationsLoader } from './loaders';
+// # atualizado: Importando o layoutLoader junto com os outros
+import { layoutLoader, profileLoader, editProfileLoader, notificationsLoader } from './loaders';
 import { loginAction, registerAction, editProfileAction } from './actions'; 
 
 // Componente de fallback para usar enquanto as páginas carregam
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
   {
     element: <Layout />,
     errorElement: <NotFound />,
+    loader: layoutLoader, // # atualizado: Esta é a conexão crucial!
     children: [
       {
         path: '/',
@@ -45,12 +47,12 @@ export const router = createBrowserRouter([
       {
         path: '/login',
         element: withSuspense(Login),
-        action: loginAction, // # atualizado
+        action: loginAction,
       },
       {
         path: '/register',
         element: withSuspense(Register),
-        action: registerAction, // # atualizado
+        action: registerAction,
       },
       {
         path: '/forgot-password',
@@ -77,7 +79,7 @@ export const router = createBrowserRouter([
             path: '/profile/edit',
             element: withSuspense(EditProfile),
             loader: editProfileLoader,
-            action: editProfileAction, // # atualizado
+            action: editProfileAction,
           },
           {
             path: '/messages',
