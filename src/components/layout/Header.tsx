@@ -6,26 +6,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth'; // # atualizado: Nossa única fonte de verdade
 import { logout } from '../../services/auth';
 import { useImageLoad } from '../../hooks/useImageLoad';
 import { subscribeToFriendRequests } from '../../services/firestore';
 
-// # atualizado: O componente agora espera receber dados via props
+// # atualizado: O Header não precisa mais receber 'profile'
 interface HeaderProps {
   initialFriendRequests: number;
 }
 
 export const Header = ({ initialFriendRequests }: HeaderProps) => {
+  // # atualizado: `user` e `profile` vêm juntos e sincronizados do hook.
+  const { user, profile } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [friendRequestsCount, setFriendRequestsCount] = useState(initialFriendRequests);
   
   const { isLoaded: isAvatarLoaded } = useImageLoad(profile?.photoURL);
 
+  // ... o useEffect agora só serve para atualizações em tempo real
   useEffect(() => {
     if (!user?.uid) {
         setFriendRequestsCount(0);
@@ -74,6 +76,7 @@ export const Header = ({ initialFriendRequests }: HeaderProps) => {
             </div>
           </Link>
 
+          {/* # atualizado: Esta condição agora é 100% confiável */}
           {user && profile ? (
             <>
               <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">

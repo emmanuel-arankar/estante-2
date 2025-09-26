@@ -1,12 +1,15 @@
+// src/router/index.tsx
+
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+// # atualizado: importações dos novos módulos de rota
+import { createBrowserRouter, RouteObject } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
 import { ProtectedRoute } from './ProtectedRoute';
 import { NotFound } from '../pages/NotFound';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
-// # atualizado: Importando o layoutLoader junto com os outros
-import { layoutLoader, profileLoader, editProfileLoader, notificationsLoader } from './loaders';
-import { loginAction, registerAction, editProfileAction } from './actions'; 
+import { layoutLoader, notificationsLoader } from './loaders';
+import { authRoutes } from '../features/auth/auth.routes';
+import { profileRoutes, protectedProfileRoutes } from '../features/profile/profile.routes';
 
 // Componente de fallback para usar enquanto as páginas carregam
 const RouteFallback = () => (
@@ -17,11 +20,6 @@ const RouteFallback = () => (
 
 // Todas as páginas agora são importadas dinamicamente (Lazy Loading)
 const Home = lazy(() => import('../pages/Home').then(module => ({ default: module.Home })));
-const Login = lazy(() => import('../pages/Login').then(module => ({ default: module.Login })));
-const Register = lazy(() => import('../pages/Register').then(module => ({ default: module.Register })));
-const ForgotPassword = lazy(() => import('../pages/ForgotPassword').then(module => ({ default: module.ForgotPassword })));
-const Profile = lazy(() => import('../pages/Profile').then(module => ({ default: module.Profile })));
-const EditProfile = lazy(() => import('../pages/EditProfile').then(module => ({ default: module.EditProfile })));
 const Messages = lazy(() => import('../pages/Messages').then(module => ({ default: module.Messages })));
 const Chat = lazy(() => import('../pages/Chat').then(module => ({ default: module.Chat })));
 const Friends = lazy(() => import('../pages/Friends').then(module => ({ default: module.Friends })));
@@ -34,64 +32,45 @@ const withSuspense = (Component: React.ElementType) => (
   </Suspense>
 );
 
+// # atualizado: Estrutura de rotas simplificada
+const appRoutes: RouteObject[] = [
+  {
+    path: '/',
+    element: withSuspense(Home),
+  },
+  ...authRoutes,
+  ...profileRoutes,
+  {
+    path: '/friends',
+    element: withSuspense(Friends),
+  },
+  {
+    path: '/notifications',
+    element: withSuspense(Notifications),
+    loader: notificationsLoader,
+  },
+  {
+    element: <ProtectedRoute />,
+    children: [
+      protectedProfileRoutes, // Rotas de perfil protegidas
+      {
+        path: '/messages',
+        element: withSuspense(Messages),
+      },
+      {
+        path: '/chat/:receiverId',
+        element: withSuspense(Chat),
+      },
+    ],
+  },
+];
+
 export const router = createBrowserRouter([
   {
     element: <Layout />,
     errorElement: <NotFound />,
-    loader: layoutLoader, // # atualizado: Esta é a conexão crucial!
-    children: [
-      {
-        path: '/',
-        element: withSuspense(Home),
-      },
-      {
-        path: '/login',
-        element: withSuspense(Login),
-        action: loginAction,
-      },
-      {
-        path: '/register',
-        element: withSuspense(Register),
-        action: registerAction,
-      },
-      {
-        path: '/forgot-password',
-        element: withSuspense(ForgotPassword),
-      },
-      {
-        path: '/profile/:nickname',
-        element: withSuspense(Profile),
-        loader: profileLoader,
-      },
-      {
-        path: '/friends',
-        element: withSuspense(Friends),
-      },
-      {
-        path: '/notifications',
-        element: withSuspense(Notifications),
-        loader: notificationsLoader,
-      },
-      {
-        element: <ProtectedRoute />,
-        children: [
-          {
-            path: '/profile/edit',
-            element: withSuspense(EditProfile),
-            loader: editProfileLoader,
-            action: editProfileAction,
-          },
-          {
-            path: '/messages',
-            element: withSuspense(Messages),
-          },
-          {
-            path: '/chat/:receiverId',
-            element: withSuspense(Chat),
-          },
-        ],
-      },
-    ],
+    loader: layoutLoader,
+    children: appRoutes, // # atualizado
   },
   {
     path: '*',

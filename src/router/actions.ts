@@ -34,7 +34,7 @@ export const loginAction = async ({ request }: any) => {
   const formData = await request.formData();
   const { email, password } = Object.fromEntries(formData);
 
-  try {
+    try {
     const userCredential = await signInWithEmailAndPassword(
       auth,
       email as string,
@@ -46,7 +46,7 @@ export const loginAction = async ({ request }: any) => {
     const profileData = await queryClient.fetchQuery(userQuery(user.uid));
 
     toastSuccessClickable(`Bem-vindo(a) de volta, ${profileData.displayName}!`);
-    return redirect('/profile/me'); // atualizado
+    return redirect('/profile/me'); // # atualizado: redireciona para um perfil com slug "me"
   } catch (error: any) {
     toastErrorClickable('Email ou senha inválidos.');
     return { error: 'Falha no login' };
@@ -95,9 +95,7 @@ export const registerAction = async ({ request }: any) => {
     toastSuccessClickable(`Conta criada com sucesso, ${displayName}!`);
     return redirect('/');
   } catch (error: any) {
-    toastErrorClickable(
-      'Não foi possível criar a conta. O email já pode estar em uso.'
-    );
+    toastErrorClickable('Não foi possível criar a conta. O email já pode estar em uso.');
     return { error: 'Falha no registro' };
   }
 };

@@ -14,19 +14,20 @@ interface AuthState {
   clearAuth: () => void;
 }
 
+// # atualizado
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  profile: null, // atualizado
-  loading: true,
+  profile: null,
+  loading: true, // Inicia como true na primeira carga
   error: null,
   setUser: (user) => set({ user }),
-  setProfile: (profile) => set({ profile }), // atualizado
+  setProfile: (profile) => set({ profile }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
   clearAuth: () => set({ 
     user: null, 
-    profile: null, // atualizado
-    loading: true, // atualizado: Essencial para reativar o loading no logout
+    profile: null, 
+    loading: true, // # atualizado: Essencial para reativar o loading no logout
     error: null 
   }),
 }));
