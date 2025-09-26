@@ -4,12 +4,13 @@ import { queryClient } from '../../lib/queryClient';
 import { getCurrentUser } from '../../router/loaders';
 import { userByNicknameQuery, userQuery } from '../users/user.queries';
 
+// # atualizado: Ambas as funções agora são async
 export const profileLoader = async ({ params }: any) => {
   const { nickname } = params;
   if (!nickname) return redirect('/');
 
   if (nickname === 'me') {
-    const user = getCurrentUser();
+    const user = await getCurrentUser();
     if (!user) return redirect('/login');
     return await queryClient.ensureQueryData(userQuery(user.uid));
   }
@@ -23,7 +24,7 @@ export const profileLoader = async ({ params }: any) => {
 };
 
 export const editProfileLoader = async () => {
-  const user = getCurrentUser();
+  const user = await getCurrentUser();
   if (!user) return redirect('/login');
   return await queryClient.ensureQueryData(userQuery(user.uid));
 };

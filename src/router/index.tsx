@@ -23,7 +23,7 @@ import {
 // Componente Lazy
 const Home = lazy(() => import('../pages/Home').then(module => ({ default: module.Home })));
 
-// # atualizado: Composição final das rotas
+// Composição final das rotas
 const publicRoutes: RouteObject[] = [
   {
     path: '/',
@@ -32,7 +32,7 @@ const publicRoutes: RouteObject[] = [
   ...authRoutes,
   ...profileRoutes,
   ...friendsRoutes,
-  ...notificationRoutes, // # atualizado
+  ...notificationRoutes,
 ];
 
 const protectedRoutes: RouteObject[] = [
