@@ -21,20 +21,18 @@ const userQuery = (userId: string) => ({
   },
 });
 
+// # atualizado: O loader do layout agora é mais simples e não busca mais o perfil.
 export const layoutLoader = async () => {
   const user = getCurrentUser();
   if (!user) {
-    return { profile: null, initialFriendRequests: 0 };
+    return { initialFriendRequests: 0 };
   }
   try {
-    const [profile, initialFriendRequests] = await Promise.all([
-      queryClient.ensureQueryData(userQuery(user.uid)),
-      getPendingRequestCount(user.uid)
-    ]);
-    return { profile, initialFriendRequests };
+    const initialFriendRequests = await getPendingRequestCount(user.uid);
+    return { initialFriendRequests };
   } catch (error) {
     console.error("Layout loader error:", error);
-    return { profile: null, initialFriendRequests: 0 };
+    return { initialFriendRequests: 0 };
   }
 };
 

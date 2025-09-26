@@ -8,21 +8,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '../../hooks/useAuth';
 import { logout } from '../../services/auth';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useImageLoad } from '../../hooks/useImageLoad';
 import { subscribeToFriendRequests } from '../../services/firestore';
-import { User } from '../../models';
 
 // # atualizado: O componente agora espera receber dados via props
 interface HeaderProps {
-  profile: User | null;
   initialFriendRequests: number;
 }
 
-export const Header = ({ profile, initialFriendRequests }: HeaderProps) => {
+export const Header = ({ initialFriendRequests }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { user } = useAuth(); // Mantido para saber se existe uma sessão de autenticação ativa
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [friendRequestsCount, setFriendRequestsCount] = useState(initialFriendRequests);
@@ -35,7 +32,6 @@ export const Header = ({ profile, initialFriendRequests }: HeaderProps) => {
         return;
     };
     
-    // # atualizado: O valor inicial foi definido pelo loader. Agora, apenas ouvimos por mudanças em tempo real.
     const unsubscribe = subscribeToFriendRequests(user.uid, (requests) => {
       setFriendRequestsCount(requests.length);
     });

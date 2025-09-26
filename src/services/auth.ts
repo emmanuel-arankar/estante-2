@@ -10,6 +10,7 @@ import { queryClient } from '@/lib/queryClient';
 export const logout = async () => {
   try {
     console.log('🚪 Iniciando logout...');
+    // # atualizado: Limpa o estado e ativa o loading ANTES de deslogar.
     useAuthStore.getState().clearAuth();
     queryClient.clear();
 
@@ -20,6 +21,7 @@ export const logout = async () => {
   } catch (error) {
     console.error('❌ Erro ao fazer logout:', error);
     toastErrorClickable('Erro ao fazer logout. Tente novamente.');
+    // # atualizado: Garante que o loading seja desativado em caso de erro.
     useAuthStore.getState().setLoading(false);
     throw error;
   }

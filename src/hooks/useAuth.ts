@@ -18,96 +18,62 @@ export const useAuth = () => {
   } = useAuthStore();
 
   useEffect(() => {
-    console.log('🔄 Iniciando listener de autenticação');
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('🔥 onAuthStateChanged disparado:', firebaseUser ? 'usuário logado' : 'usuário não logado');
-      
       try {
-        setError(null);
-        setUser(firebaseUser);
-
         if (firebaseUser) {
-          console.log('📄 Carregando perfil do usuário...');
-          try {
-            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-            if (userDoc.exists()) {
-              const userData = userDoc.data();
+          // Usuário logado, busca o perfil
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const convertFirestoreDate = (date: any) => {
+              if (!date) return new Date();
+              return date.toDate ? date.toDate() : new Date(date);
+            };
             
-              console.log('📦 Dados brutos do Firestore:', userData);
-            
-              // Função helper para converter datas do Firestore
-              const convertFirestoreDate = (date: any) => {
-                if (!date) return new Date();
-                try {
-                  return date.toDate ? date.toDate() : new Date(date);
-                } catch (error) {
-                  console.warn('Erro ao converter data:', error);
-                  return new Date();
-                }
-              };
-              
-              const createdAt = convertFirestoreDate(userData.createdAt);
-              const updatedAt = convertFirestoreDate(userData.updatedAt);
-              const joinedAt = convertFirestoreDate(userData.joinedAt) || createdAt;
-              const birthDate = userData.birthDate ? convertFirestoreDate(userData.birthDate) : null;
-            
-              const finalProfile: User = {
-                id: firebaseUser.uid,
-                email: userData.email ?? firebaseUser.email ?? '',
-                displayName: userData.displayName ?? firebaseUser.displayName ?? 'Usuário',
-                nickname: userData.nickname ?? '',
-                photoURL: userData.photoURL ?? firebaseUser.photoURL ?? null,
-                bio: userData.bio ?? '',
-                location: userData.location ?? '',
-                website: userData.website ?? '',
-                birthDate: birthDate,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                joinedAt: joinedAt,
-                booksRead: userData.booksRead ?? 0,
-                currentlyReading: userData.currentlyReading ?? 0,
-                followers: userData.followers ?? 0,
-                following: userData.following ?? 0,
-              };
-            
-              console.log('✅ Perfil final construído:', finalProfile);
-            
-              setProfile(finalProfile);
-              setLoading(false);
-            } else {
-              console.log('⚠️ Perfil não existe no Firestore');
-              setProfile(null);
-              setLoading(false);
-            } 
-          } catch (profileError) {
-            console.error('❌ Erro ao carregar perfil:', profileError);
+            const finalProfile: User = {
+              id: firebaseUser.uid,
+              email: userData.email ?? firebaseUser.email ?? '',
+              displayName: userData.displayName ?? firebaseUser.displayName ?? 'Usuário',
+              nickname: userData.nickname ?? '',
+              photoURL: userData.photoURL ?? firebaseUser.photoURL ?? undefined,
+              bio: userData.bio ?? '',
+              location: userData.location ?? '',
+              website: userData.website ?? '',
+              birthDate: userData.birthDate ? convertFirestoreDate(userData.birthDate) : undefined,
+              createdAt: convertFirestoreDate(userData.createdAt),
+              updatedAt: convertFirestoreDate(userData.updatedAt),
+              joinedAt: convertFirestoreDate(userData.joinedAt),
+              booksRead: userData.booksRead ?? 0,
+              currentlyReading: userData.currentlyReading ?? 0,
+              followers: userData.followers ?? 0,
+              following: userData.following ?? 0,
+            };
+            setUser(firebaseUser);
+            setProfile(finalProfile);
+          } else {
+            // Caso raro: usuário autenticado mas sem perfil no DB
+            setUser(firebaseUser);
             setProfile(null);
-            setLoading(false); // ✅ Loading finalizado: usuário logado mas erro no perfil
-            // Não definir como erro crítico, usuário ainda está autenticado
+            setError("Perfil do usuário não encontrado.");
           }
         } else {
-          console.log('👤 Usuário não está logado');
-          setUser(null); // atualizado
+          // Usuário deslogado, limpa tudo
+          setUser(null);
           setProfile(null);
-          setLoading(false); // ✅ Loading finalizado: usuário não logado
         }
-      } catch (error) {
-        console.error('❌ Erro crítico na autenticação:', error);
-        setError(error instanceof Error ? error.message : 'Erro de autenticação');
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error('Erro de autenticação');
+        setError(err.message);
         setUser(null);
         setProfile(null);
-        setLoading(false); // ✅ Loading finalizado: erro crítico
+      } finally {
+        // # atualizado: O loading SÓ TERMINA aqui, após todo o processo.
+        setLoading(false);
       }
     });
 
     return () => unsubscribe();
   }, [setUser, setProfile, setLoading, setError]);
 
-  return {
-    user,
-    profile,
-    loading,
-    error,
-  };
+  return { user, profile, loading, error };
 };
