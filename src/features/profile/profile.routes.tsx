@@ -1,9 +1,9 @@
 import { lazy } from 'react'; // # atualizado
 import { RouteObject } from 'react-router-dom';
-import { profileLoader, editProfileLoader } from '../../router/loaders';
-import { editProfileAction } from '../../router/actions';
+import { profileLoader, editProfileLoader } from './profile.loaders';
+import { editProfileAction } from './profile.actions';
 import { ProtectedRoute } from '../../router/ProtectedRoute';
-import { withSuspense } from '../../router/RouteSuspense'; // # atualizado
+import { withSuspense } from '../../router/RouteSuspense'; 
 
 // # atualizado: Lógica de suspense removida daqui
 const Profile = lazy(() => import('../../pages/Profile').then(module => ({ default: module.Profile })));

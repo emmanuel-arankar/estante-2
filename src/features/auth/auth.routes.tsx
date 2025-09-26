@@ -1,7 +1,7 @@
-import { lazy } from 'react'; // # atualizado
+import { lazy } from 'react';
 import { RouteObject } from 'react-router-dom';
-import { loginAction, registerAction } from '../../router/actions';
-import { withSuspense } from '../../router/RouteSuspense'; // # atualizado
+import { loginAction, registerAction } from './auth.actions';
+import { withSuspense } from '../../router/RouteSuspense';
 
 // # atualizado: Lógica de suspense removida daqui
 const Login = lazy(() => import('../../pages/Login').then(module => ({ default: module.Login })));
