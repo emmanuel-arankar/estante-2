@@ -1,7 +1,8 @@
 import { redirect } from 'react-router-dom';
 import { toastErrorClickable } from '../../components/ui/toast';
 import { queryClient } from '../../lib/queryClient';
-import { getCurrentUser, userByNicknameQuery, userQuery } from '../../router/loaders'; 
+import { getCurrentUser } from '../../router/loaders';
+import { userByNicknameQuery, userQuery } from '../users/user.queries';
 
 export const profileLoader = async ({ params }: any) => {
   const { nickname } = params;

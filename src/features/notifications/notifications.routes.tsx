@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 import { RouteObject } from 'react-router-dom';
 import { withSuspense } from '../../router/RouteSuspense';
-import { notificationsLoader } from '../../router/loaders';
+import { notificationsLoader } from './notifications.loaders';
 
 const Notifications = lazy(() => import('../../pages/Notifications').then(module => ({ default: module.Notifications })));
 

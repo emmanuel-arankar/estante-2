@@ -13,7 +13,7 @@ import {
   toastErrorClickable,
 } from '../../components/ui/toast';
 import { User } from '../../models';
-import { userQuery } from '../../router/actions';
+import { userQuery } from '../users/user.queries';
 
 export const loginAction = async ({ request }: any) => {
   const formData = await request.formData();

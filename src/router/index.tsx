@@ -10,7 +10,7 @@ import { NotFound } from '../pages/NotFound';
 // Loaders
 import { layoutLoader } from './loaders';
 
-// # atualizado: Importação única de todas as rotas de features
+// Rotas
 import {
   authRoutes,
   profileRoutes,
