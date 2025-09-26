@@ -1,10 +1,11 @@
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Toaster } from 'react-hot-toast';
+// # atualizado: importando useLoaderData
 import { Outlet, useLoaderData, useLocation } from 'react-router-dom';
 import { User } from '../../models';
 
-// Interface para garantir a tipagem dos dados do loader
+// # atualizado: Interface para garantir a tipagem dos dados do loader
 interface LayoutData {
   profile: User | null;
   initialFriendRequests: number;

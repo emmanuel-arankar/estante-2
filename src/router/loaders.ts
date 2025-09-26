@@ -21,7 +21,6 @@ const userQuery = (userId: string) => ({
   },
 });
 
-// # atualizado: Loader para a rota principal (Layout)
 export const layoutLoader = async () => {
   const user = getCurrentUser();
   if (!user) {

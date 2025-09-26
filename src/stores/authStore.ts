@@ -26,7 +26,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearAuth: () => set({ 
     user: null, 
     profile: null, 
-    loading: false,
+    loading: true, // atualizado
     error: null 
   }),
 }));

@@ -88,6 +88,7 @@ export const useAuth = () => {
           }
         } else {
           console.log('👤 Usuário não está logado');
+          setUser(null); // atualizado
           setProfile(null);
           setLoading(false); // ✅ Loading finalizado: usuário não logado
         }

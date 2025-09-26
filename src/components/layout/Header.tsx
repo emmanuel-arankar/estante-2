@@ -30,13 +30,12 @@ export const Header = ({ profile, initialFriendRequests }: HeaderProps) => {
   const { isLoaded: isAvatarLoaded } = useImageLoad(profile?.photoURL);
 
   useEffect(() => {
-    // Se o usuário deslogar, reseta a contagem
     if (!user?.uid) {
         setFriendRequestsCount(0);
         return;
     };
     
-    // O valor inicial foi definido pelo loader. Agora, apenas ouvimos por mudanças em tempo real.
+    // # atualizado: O valor inicial foi definido pelo loader. Agora, apenas ouvimos por mudanças em tempo real.
     const unsubscribe = subscribeToFriendRequests(user.uid, (requests) => {
       setFriendRequestsCount(requests.length);
     });
