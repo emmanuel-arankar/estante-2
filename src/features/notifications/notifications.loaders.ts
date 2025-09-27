@@ -9,7 +9,6 @@ const notificationsQuery = (userId: string) => ({
 });
 
 export const notificationsLoader = async () => {
-  // # atualizado: Adicionado 'await' para esperar a Promise do usuário.
   const user = await getCurrentUser();
   if (!user) return redirect('/login');
   return await queryClient.ensureQueryData(notificationsQuery(user.uid));

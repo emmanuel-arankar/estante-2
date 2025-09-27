@@ -1,4 +1,4 @@
-import { signOut } from 'firebase/auth';
+import { signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from './firebase';
 import { useAuthStore } from '../stores/authStore';
 import {
@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/toast';
 import { queryClient } from '@/lib/queryClient';
 
-export const logout = async( ) => {
+export const logout = async() => {
   try {
     console.log('🚪 Iniciando logout...');
     useAuthStore.getState().clearAuth();
@@ -25,13 +25,20 @@ export const logout = async( ) => {
   }
 };
 
-// # atualizado: A função volta a ser síncrona.
-// Ela é chamada pelos loaders APÓS o carregamento inicial da autenticação.
-export const getCurrentUser = () => {
-  return auth.currentUser;
+const authReadyPromise = new Promise<FirebaseUser | null>(resolve => {
+  const unsubscribe = onAuthStateChanged(auth, user => {
+    unsubscribe();
+    resolve(user);
+  });
+});
+
+// # atualizado: Função agora é assíncrona para aguardar a verificação inicial do Firebase.
+// Isso evita a "condição de corrida" nos loaders.
+export const getCurrentUser = async (): Promise<FirebaseUser | null> => {
+  return authReadyPromise;
 };
 
-// # atualizado: Função também se torna síncrona.
-export const isAuthenticated = () => {
-  return !!auth.currentUser;
+export const isAuthenticated = async (): Promise<boolean> => {
+  const user = await getCurrentUser();
+  return !!user;
 };
