@@ -28,7 +28,7 @@ export const loginAction = async ({ request }: any) => {
     const user = userCredential.user;
     const profileData = await queryClient.fetchQuery(userQuery(user.uid));
     toastSuccessClickable(`Bem-vindo(a) de volta, ${profileData.displayName}!`);
-    return redirect('/profile/me');
+    return redirect('/profile/me'); // # atualizado
   } catch (error: any) {
     toastErrorClickable('Email ou senha inválidos.');
     return { error: 'Falha no login' };
