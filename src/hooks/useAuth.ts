@@ -21,12 +21,10 @@ export const useAuth = () => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          // Usuário está logado, AGORA busca o perfil.
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
-            // Perfil encontrado, preenche a store.
             const userData = userDoc.data();
-            const convertFirestoreDate = (date: any) => {
+            const convertFirestoreDate = (date: any): Date => {
                 if (!date) return new Date();
                 return date.toDate ? date.toDate() : new Date(date);
             };
@@ -51,13 +49,11 @@ export const useAuth = () => {
             setUser(firebaseUser);
             setProfile(finalProfile);
           } else {
-            // Usuário autenticado mas sem perfil no banco de dados.
             setUser(firebaseUser);
             setProfile(null);
             setError("Perfil do usuário não encontrado no banco de dados.");
           }
         } else {
-          // Usuário está deslogado, limpa o estado.
           setUser(null);
           setProfile(null);
         }
@@ -67,12 +63,13 @@ export const useAuth = () => {
         setUser(null);
         setProfile(null);
       } finally {
-        // # atualizado: O loading SÓ TERMINA aqui, após todo o processo.
+        // # atualizado: O loading SÓ TERMINA aqui, após todo o processo inicial.
         setLoading(false);
       }
     });
 
     return () => unsubscribe();
+    // # atualizado: Simplificado para rodar apenas uma vez.
   }, [setUser, setProfile, setLoading, setError]);
 
   return { user, profile, loading, error };
