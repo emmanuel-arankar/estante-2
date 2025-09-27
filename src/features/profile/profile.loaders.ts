@@ -1,16 +1,17 @@
 import { redirect } from 'react-router-dom';
 import { toastErrorClickable } from '../../components/ui/toast';
 import { queryClient } from '../../lib/queryClient';
-import { getCurrentUser } from '../../router/loaders';
+import { getCurrentUser } from '../../services/auth';
 import { userByNicknameQuery, userQuery } from '../users/user.queries';
 
-// # atualizado: Ambas as funções agora são async
+// # atualizado: O comentário agora reflete a realidade da implementação.
+// A função sempre foi async, mas agora `getCurrentUser` também é.
 export const profileLoader = async ({ params }: any) => {
   const { nickname } = params;
   if (!nickname) return redirect('/');
 
   if (nickname === 'me') {
-    const user = await getCurrentUser(); // agora aguarda
+    const user = await getCurrentUser(); // agora realmente aguarda
     if (!user) return redirect('/login');
     return await queryClient.ensureQueryData(userQuery(user.uid));
   }
@@ -24,7 +25,7 @@ export const profileLoader = async ({ params }: any) => {
 };
 
 export const editProfileLoader = async () => {
-  const user = await getCurrentUser(); // agora aguarda
+  const user = await getCurrentUser(); // agora realmente aguarda
   if (!user) return redirect('/login');
   return await queryClient.ensureQueryData(userQuery(user.uid));
 };

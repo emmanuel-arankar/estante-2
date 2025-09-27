@@ -1,7 +1,7 @@
 import { redirect } from 'react-router-dom';
 import { getUserNotifications } from '../../services/firestore';
 import { queryClient } from '../../lib/queryClient';
-import { getCurrentUser } from '../../router/loaders';
+import { getCurrentUser } from '../../services/auth';
 
 const notificationsQuery = (userId: string) => ({
     queryKey: ['notifications', userId],
@@ -9,7 +9,8 @@ const notificationsQuery = (userId: string) => ({
 });
 
 export const notificationsLoader = async () => {
-  const user = getCurrentUser();
+  // # atualizado: Adicionado 'await' para esperar a Promise do usuário.
+  const user = await getCurrentUser();
   if (!user) return redirect('/login');
   return await queryClient.ensureQueryData(notificationsQuery(user.uid));
 };
