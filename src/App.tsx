@@ -1,7 +1,6 @@
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import { useAuth } from './hooks/useAuth';
-import { LoadingSpinner } from './components/ui/loading-spinner';
 
 function App() {
   // # atualizado: O hook useAuth é chamado aqui para iniciar a verificação de auth.

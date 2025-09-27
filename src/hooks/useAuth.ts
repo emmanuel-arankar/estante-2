@@ -70,7 +70,7 @@ export const useAuth = () => {
 
     return () => unsubscribe();
     // # atualizado: Simplificado para rodar apenas uma vez.
-  }, [setUser, setProfile, setLoading, setError]);
+  }, []);
 
   return { user, profile, loading, error };
 };

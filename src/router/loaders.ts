@@ -1,6 +1,4 @@
-import { auth } from '../services/firebase';
 import { getPendingRequestCount } from '../services/firestore';
-// # atualizado: A importação agora é da função síncrona.
 import { getCurrentUser } from '../services/auth';
 
 // # atualizado: A função volta a ser síncrona para compatibilidade.
