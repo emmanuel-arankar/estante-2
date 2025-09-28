@@ -7,7 +7,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Home } from 'lucide-react';
+import { ChevronRightIcon, Home } from 'lucide-react';
 import { PATHS } from '@/router/paths';
 import { motion, AnimatePresence } from 'framer-motion'; // # atualizado
 import { itemVariants, SMOOTH_TRANSITION } from '../../lib/animations'; // # atualizado
@@ -39,11 +39,11 @@ export const Breadcrumbs = () => {
     return null;
   }
 
-  return (
-    // # atualizado: Todo o miolo do Breadcrumb foi atualizado para usar `framer-motion`
+    return (
     <Breadcrumb className="hidden md:flex mt-4 mb-2">
       <BreadcrumbList>
         <AnimatePresence initial={false}>
+          {/* Item Home (sem alteração) */}
           <motion.li
             key="home-breadcrumb"
             className="inline-flex items-center gap-1.5"
@@ -72,7 +72,9 @@ export const Breadcrumbs = () => {
                 exit="exit"
                 transition={{ ...SMOOTH_TRANSITION, delay: (index + 1) * 0.08 }}
               >
-                <BreadcrumbSeparator />
+                {/* # atualizado: Substituímos o componente Separator pelo seu ícone para evitar o aninhamento de <li> */}
+                <ChevronRightIcon className="h-3.5 w-3.5" />
+                
                 {isLast ? (
                   <BreadcrumbPage className="flex items-center gap-2 font-medium text-foreground px-2 py-1">
                     {crumb.icon}
