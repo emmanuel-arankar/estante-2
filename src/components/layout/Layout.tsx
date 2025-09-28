@@ -2,12 +2,13 @@ import { useEffect } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Toaster } from 'react-hot-toast';
-import { Outlet, useLoaderData, useLocation, useMatches } from 'react-router-dom';
+import { Outlet, useLoaderData, useLocation, useMatches, useNavigation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { LoadingSpinner } from '../ui/loading-spinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { mainPageFadeVariants, MAIN_PAGE_TRANSITION } from '../../lib/animations';
 import { PATHS } from '@/router/paths';
+import { FocusManager } from '@/router/FocusManager';
 
 // Hook customizado para gerenciar o título da página
 const usePageTitle = () => {
@@ -38,6 +39,8 @@ export const Layout = () => {
   const { initialFriendRequests } = useLoaderData() as LayoutData;
   const { loading: authLoading } = useAuth();
   const location = useLocation();
+  const navigation = useNavigation(); // # atualizado
+  const isLoading = navigation.state === 'loading'; // # atualizado
 
   usePageTitle();
 
@@ -58,6 +61,14 @@ export const Layout = () => {
 
     return (
     <div className="flex flex-col min-h-screen bg-gray-50 w-full overflow-x-hidden">
+      <FocusManager />
+      {/* # atualizado: Indicador de carregamento global */}
+      <div
+        className={`fixed top-0 left-0 right-0 h-1 bg-emerald-500 z-[99] transition-transform duration-300 ${
+          isLoading ? 'scale-x-100' : 'scale-x-0'
+        }`}
+        style={{ transformOrigin: 'left' }}
+      />
       <Header initialFriendRequests={initialFriendRequests} />
       <main className="flex-1 w-full pt-20 grid">
         <AnimatePresence initial={false}>
