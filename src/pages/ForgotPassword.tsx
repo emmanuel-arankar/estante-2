@@ -10,9 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { auth } from '../services/firebase';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
-import { motion } from 'framer-motion';
 import { toastSuccessClickable, toastErrorClickable } from '@/components/ui/toast';
 import { PATHS } from '../router/paths';
+
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -126,64 +126,64 @@ export const ForgotPassword = () => {
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-4 w-full overflow-x-hidden">
+      {/* # atualizado: Removido um 'div' aninhado desnecessário para limpar a estrutura */}
       <div className="w-full max-w-md">
-        <div className="w-full max-w-md">
-          <Card className="shadow-xl">
-            <CardHeader className="space-y-1">
-              <div className="flex items-center space-x-2 mb-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                  className="rounded-full"
-                >
-                  <Link to={PATHS.LOGIN}>
-                    <ArrowLeft className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <CardTitle className="text-2xl">Recuperar Senha</CardTitle>
-              </div>
-              <p className="text-center text-gray-600">
-                Digite seu email para receber o link de recuperação
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      type="email"
-                      placeholder="Seu email cadastrado"
-                      className="pl-10"
-                      {...form.register('email')}
-                    />
-                  </div>
-                  {form.formState.errors.email && (
-                    <p className="text-sm text-red-600">
-                      {form.formState.errors.email.message}
-                    </p>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  disabled={isLoading}
-                >
-                  {isLoading ? <LoadingSpinner size="sm" /> : 'Enviar Link de Recuperação'}
-                </Button>
-              </form>
-
-              <div className="text-center text-sm">
-                <span className="text-gray-600">Lembrou da senha? </span>
-                <Link to={PATHS.LOGIN} className="text-emerald-600 hover:underline font-medium">
-                  Fazer Login
+        <Card className="shadow-xl">
+          <CardHeader className="space-y-1">
+            <div className="flex items-center space-x-2 mb-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="rounded-full"
+              >
+                <Link to={PATHS.LOGIN}>
+                  <ArrowLeft className="h-4 w-4" />
                 </Link>
+              </Button>
+              <CardTitle className="text-2xl">Recuperar Senha</CardTitle>
+            </div>
+            <p className="text-center text-gray-600">
+              Digite seu email para receber o link de recuperação
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* O formulário e o restante do conteúdo permanecem os mesmos */}
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="email"
+                    placeholder="Seu email cadastrado"
+                    className="pl-10"
+                    {...form.register('email')}
+                  />
+                </div>
+                {form.formState.errors.email && (
+                  <p className="text-sm text-red-600">
+                    {form.formState.errors.email.message}
+                  </p>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                disabled={isLoading}
+              >
+                {isLoading ? <LoadingSpinner size="sm" /> : 'Enviar Link de Recuperação'}
+              </Button>
+            </form>
+
+            <div className="text-center text-sm">
+              <span className="text-gray-600">Lembrou da senha? </span>
+              <Link to={PATHS.LOGIN} className="text-emerald-600 hover:underline font-medium">
+                Fazer Login
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

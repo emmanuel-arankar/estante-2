@@ -1,6 +1,3 @@
-// src/features/profile/profile.routes.tsx
-
-// # atualizado
 import React, { lazy } from 'react';
 import { RouteObject, Outlet } from 'react-router-dom';
 import {
@@ -52,13 +49,13 @@ export const profileRoutes: RouteObject[] = [
   },
 ];
 
-// # atualizado: Nova estrutura para as rotas protegidas que corrige o breadcrumb e a renderização.
+// # atualizado: Nova estrutura para rotas protegidas que corrige o erro e o comportamento.
 export const protectedProfileRoutes: RouteObject[] = [
   {
-    path: PATHS.PROFILE_ME, // Rota pai: /profile/me
-    element: <Outlet />,    // Este elemento pai apenas renderiza seus filhos
+    path: PATHS.PROFILE_ME, // Rota pai -> /profile/me
+    element: <Outlet />,    // O elemento pai apenas renderiza a rota filha correspondente
     handle: {
-      // O breadcrumb "Meu Perfil" fica nesta rota pai
+      // O breadcrumb "Meu Perfil" fica na rota pai para ser compartilhado
       breadcrumb: () => ({
         label: 'Meu Perfil',
         icon: <User className="h-4 w-4" />,
@@ -66,23 +63,24 @@ export const protectedProfileRoutes: RouteObject[] = [
     },
     children: [
       {
-        // Esta é uma rota "sem caminho" (pathless) que agrupa a página de perfil e suas abas.
-        // Ela renderiza o componente Profile, que por sua vez tem um <Outlet /> para as abas.
+        // Esta é uma rota filha "sem caminho" (pathless).
+        // Ela renderiza o componente Profile e agrupa as abas.
+        // Por não ser uma rota "index", ela PODE ter filhos.
         element: withSuspense(Profile),
         loader: meProfileLoader,
         errorElement: <ErrorElement />,
         handle: {
           title: () => 'Meu Perfil | Estante de Bolso',
         },
-        children: profileTabRoutes, // As abas são filhas da página de perfil
+        children: profileTabRoutes, // As abas são filhas aqui
       },
       {
-        path: 'edit', // Rota filha para edição: /profile/me/edit
+        path: 'edit', // Rota irmã para a edição -> /profile/me/edit
         element: withSuspense(EditProfile),
         loader: editProfileLoader,
         action: editProfileAction,
         handle: {
-          // O breadcrumb "Editar" agora é corretamente aninhado
+          // O breadcrumb "Editar" é aninhado corretamente
           breadcrumb: () => ({
             label: 'Editar',
             icon: <Edit3 className="h-4 w-4" />,
