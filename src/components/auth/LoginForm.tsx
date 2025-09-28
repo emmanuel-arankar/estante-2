@@ -1,5 +1,5 @@
 import { useState } from 'react'; // # atualizado
-import { Form, Link, useNavigation, useNavigate } from 'react-router-dom'; // # atualizado
+import { Form, Link, useNavigation, useNavigate, useLocation } from 'react-router-dom'; // # atualizado
 import { Eye, EyeOff, Mail, Lock, Chrome } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,12 @@ export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
   const navigate = useNavigate(); // # atualizado
+  const location = useLocation(); // # atualizado
   const [isGoogleLoading, setIsGoogleLoading] = useState(false); // # atualizado
   const isSubmitting = navigation.state === 'submitting' || isGoogleLoading; // # atualizado
+
+  // # atualizado: Obtém a rota de origem, se existir
+  const from = location.state?.from?.pathname || '/';
 
   // # atualizado: Lógica completa para login com Google
   const handleGoogleLogin = async () => {
@@ -78,6 +82,9 @@ export const LoginForm = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <Form method="post" action={PATHS.LOGIN} className="space-y-4">
+          {/* # atualizado: Adicionado campo oculto para enviar a URL de redirecionamento */}
+          <input type="hidden" name="redirectTo" value={from} />
+          
           <div className="space-y-2">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />

@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { RouteObject } from 'react-router-dom';
+import { RouteObject, ScrollRestoration } from 'react-router-dom';
 
 // Layout e Utilitários
 import { Layout } from '../components/layout/Layout';
@@ -25,7 +25,12 @@ const Home = lazy(() => import('../pages/Home').then(module => ({ default: modul
 
 export const routes: RouteObject[] = [
   {
-    element: <Layout />,
+    element: (
+      <>
+        <Layout />
+        <ScrollRestoration />
+      </>
+    ),
     errorElement: <NotFound />,
     loader: layoutLoader,
     children: [

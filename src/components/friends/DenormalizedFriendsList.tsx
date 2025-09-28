@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useLocation, useOutletContext, Link } from 'react-router-dom';
 import { Search, Users, UserPlus, Clock, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -155,7 +155,6 @@ const SentRequestListItem = ({ friendship, onCancel }: { friendship: Denormalize
   </motion.div>
 );
 
-
 // Estado Vazio e Ações em Massa
 const EmptyState = ({ icon: Icon, title, description }: { icon: React.ComponentType<{ className?: string }>, title: string, description: string }) => (
   <div className="text-center py-12"><Icon className="h-12 w-12 text-gray-400 mx-auto mb-4" /><h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3><p className="text-gray-600">{description}</p></div>
@@ -181,12 +180,26 @@ export const DenormalizedFriendsList: React.FC = () => {
   const location = useLocation();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
-  
+
   const {
-    friends, requests, sentRequests, stats, loading, loadingMore, error,
-    hasMoreFriends, searchQuery, setSearchQuery, sortField, setSortField,
-    sortDirection, setSortDirection, loadMoreFriends, refreshData, acceptFriendRequest,
-    rejectFriendRequest, removeFriend, cancelSentRequest, cancelAllSentRequests
+    friends, 
+    requests, 
+    sentRequests, 
+    stats, 
+    loading, 
+    loadingMore, 
+    error,
+    hasMoreFriends, 
+    searchQuery, setSearchQuery, 
+    sortField, setSortField,
+    sortDirection, setSortDirection, 
+    loadMoreFriends, 
+    refreshData, 
+    acceptFriendRequest,
+    rejectFriendRequest, 
+    removeFriend, 
+    cancelSentRequest, 
+    cancelAllSentRequests
   } = useDenormalizedFriends();
 
   const activeTab = useMemo(() => {

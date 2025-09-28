@@ -18,7 +18,8 @@ import { PATHS } from '../../router/paths';
 
 export const loginAction = async ({ request }: any) => {
   const formData = await request.formData();
-  const { email, password } = Object.fromEntries(formData);
+  // # atualizado: Extraímos o 'redirectTo' do formulário
+  const { email, password, redirectTo } = Object.fromEntries(formData);
 
   try {
     const userCredential = await signInWithEmailAndPassword(
@@ -29,7 +30,9 @@ export const loginAction = async ({ request }: any) => {
     const user = userCredential.user;
     const profileData = await queryClient.fetchQuery(userQuery(user.uid));
     toastSuccessClickable(`Bem-vindo(a) de volta, ${profileData.displayName}!`);
-    return redirect(PATHS.PROFILE_ME);
+    
+    // # atualizado: Redireciona para a página original ou para o perfil como padrão
+    return redirect((redirectTo as string) || PATHS.PROFILE_ME);
   } catch (error: any) {
     toastErrorClickable('Email ou senha inválidos.');
     return { error: 'Falha no login' };
