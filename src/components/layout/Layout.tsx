@@ -1,47 +1,43 @@
+// # atualizado
+
 import { useEffect } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Toaster } from 'react-hot-toast';
 import { Outlet, useLoaderData, useLocation, useMatches, useNavigation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { LoadingSpinner } from '../ui/loading-spinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { mainPageFadeVariants, MAIN_PAGE_TRANSITION } from '../../lib/animations';
 import { PATHS } from '@/router/paths';
 import { FocusManager } from '@/router/FocusManager';
-import { User } from '@/models';
 import { toastSuccessClickable } from '../ui/toast';
+import { User } from '@/models';
 
-// Hook customizado para gerenciar o título da página
+interface LayoutData {
+  userProfile: User | null;
+  initialFriendRequests: number;
+}
+
+// Hook de título da página (sem alteração)
 const usePageTitle = () => {
   const matches = useMatches();
 
   useEffect(() => {
-    // Encontra a rota mais específica (a última na hierarquia) que tenha um 'handle' com a propriedade 'title'
     const lastMatchWithTitle = [...matches].reverse().find(
       (match) => match.handle && typeof (match.handle as any).title === 'function'
     );
 
     if (lastMatchWithTitle) {
       const handle = lastMatchWithTitle.handle as any;
-      // Executa a função 'title', passando os dados do loader daquela rota
       document.title = handle.title(lastMatchWithTitle.data);
     } else {
-      // Título padrão se nenhuma rota definir um
       document.title = 'Estante de Bolso - Sua rede social de leitura';
     }
-  }, [matches]); // Re-executa sempre que as rotas ativas mudarem
+  }, [matches]);
 };
-
-// Definir a interface para os dados do loader
-interface LayoutData {
-  userProfile: User | null;
-  initialFriendRequests: number;
-}
 
 export const Layout = () => {
   const { userProfile, initialFriendRequests } = useLoaderData() as LayoutData;
-  const { loading: authLoading } = useAuth();
   const location = useLocation();
   const navigation = useNavigation();
   const isLoading = navigation.state === 'loading';
@@ -54,21 +50,11 @@ export const Layout = () => {
       toastSuccessClickable(toastMessage);
       sessionStorage.removeItem('showLoginSuccessToast');
     }
-    // Dispara a verificação a cada mudança de página
   }, [location]);
 
-  const pageKey = location.pathname.split('/')[1] || 'home';
+  const pageKey = location.pathname; // Usar o pathname completo para garantir a troca de animação
   const noFooterPaths = [PATHS.LOGIN, PATHS.REGISTER, PATHS.FORGOT_PASSWORD];
   const shouldShowFooter = !noFooterPaths.includes(location.pathname);
-
-  // O spinner de tela cheia agora só aparece durante a verificação inicial
-  if (authLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <LoadingSpinner className="h-12 w-12 text-emerald-600" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 w-full overflow-x-hidden">
@@ -79,13 +65,16 @@ export const Layout = () => {
         }`}
         style={{ transformOrigin: 'left' }}
       />
-      {/* Passar o perfil do usuário para o Header */}
+      
+      {/* O Header agora é estático, fora do bloco de animação */}
       <Header userProfile={userProfile} initialFriendRequests={initialFriendRequests} />
-      <main className="flex-1 w-full pt-20 grid">
-        <AnimatePresence initial={false}>
+
+      {/* A animação agora envolve apenas a área de conteúdo principal */}
+      <main className="flex-1 w-full pt-20 flex flex-col">
+        <AnimatePresence mode="wait">
           <motion.div
-            key={pageKey} // # atualizado
-            className="[grid-area:1/1]"
+            key={pageKey}
+            className="flex-1 flex flex-col" // O container da animação
             variants={mainPageFadeVariants}
             initial="hidden"
             animate="visible"
@@ -97,6 +86,7 @@ export const Layout = () => {
         </AnimatePresence>
       </main>
 
+      {/* O Footer também fica fora da animação para ser estável */}
       {shouldShowFooter && <Footer />}
       <Toaster
         position="top-right"
