@@ -1,11 +1,8 @@
-// # atualizado
-
 import { useEffect } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Toaster } from 'react-hot-toast';
 import { Outlet, useLoaderData, useLocation, useMatches, useNavigation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { mainPageFadeVariants, MAIN_PAGE_TRANSITION } from '../../lib/animations';
 import { PATHS } from '@/router/paths';
@@ -43,7 +40,6 @@ export const Layout = () => {
   const isLoading = navigation.state === 'loading';
 
   usePageTitle();
-
   useEffect(() => {
     const toastMessage = sessionStorage.getItem('showLoginSuccessToast');
     if (toastMessage) {
@@ -52,10 +48,12 @@ export const Layout = () => {
     }
   }, [location]);
 
-  const pageKey = location.pathname; // Usar o pathname completo para garantir a troca de animação
+  // Usar o pathname completo garante que a animação dispare em qualquer mudança de rota
+  const pageKey = location.pathname + location.search;
   const noFooterPaths = [PATHS.LOGIN, PATHS.REGISTER, PATHS.FORGOT_PASSWORD];
   const shouldShowFooter = !noFooterPaths.includes(location.pathname);
 
+  // O spinner de tela cheia foi movido para o ProtectedRoute
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 w-full overflow-x-hidden">
       <FocusManager />
@@ -66,27 +64,26 @@ export const Layout = () => {
         style={{ transformOrigin: 'left' }}
       />
       
-      {/* O Header agora é estático, fora do bloco de animação */}
+      {/* O Header é estático, sempre presente e estável */}
       <Header userProfile={userProfile} initialFriendRequests={initialFriendRequests} />
 
-      {/* A animação agora envolve apenas a área de conteúdo principal */}
-      <main className="flex-1 w-full pt-20 flex flex-col">
+      {/* A animação agora acontece somente no container do conteúdo principal */}
+      <main className="flex-1 w-full pt-20 grid">
         <AnimatePresence mode="wait">
           <motion.div
             key={pageKey}
-            className="flex-1 flex flex-col" // O container da animação
             variants={mainPageFadeVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
             transition={MAIN_PAGE_TRANSITION}
+            className="grid" // Garante que o filho preencha o espaço
           >
             <Outlet />
           </motion.div>
         </AnimatePresence>
       </main>
 
-      {/* O Footer também fica fora da animação para ser estável */}
       {shouldShowFooter && <Footer />}
       <Toaster
         position="top-right"
