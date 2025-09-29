@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLocation, useOutletContext, Link } from 'react-router-dom';
 import { Search, Users, UserPlus, Clock, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,8 +14,10 @@ import { SortDropdown } from './SortDropdown';
 import { ptBR } from 'date-fns/locale';
 import { PATHS } from '../../router/paths';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { PrefetchLink } from '../ui/prefetch-link';
+import { userByNicknameQuery } from '@/features/users/user.queries';
 
-// Componente para exibir um amigo individual (Grid)
+// # atualizado: FriendCard com PrefetchLink
 const FriendCard = React.forwardRef<HTMLDivElement, { friendship: DenormalizedFriendship; onAction: (id: string) => void }>(
   ({ friendship, onAction }, ref) => {
     const { friend } = friendship;
@@ -40,9 +42,13 @@ const FriendCard = React.forwardRef<HTMLDivElement, { friendship: DenormalizedFr
           
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-gray-900 truncate">
-              <Link to={PATHS.PROFILE({ nickname: friend.nickname })} className="hover:text-emerald-600 transition-colors">
+              <PrefetchLink
+                to={PATHS.PROFILE({ nickname: friend.nickname })}
+                query={userByNicknameQuery(friend.nickname)}
+                className="hover:text-emerald-600 transition-colors"
+              >
                 {friend.displayName}
-              </Link>
+              </PrefetchLink>
             </h3>
             <p className="text-sm text-gray-600 truncate">@{friend.nickname}</p>
           </div>
@@ -61,9 +67,8 @@ const FriendCard = React.forwardRef<HTMLDivElement, { friendship: DenormalizedFr
     );
   }
 );
-FriendCard.displayName = 'FriendCard';
 
-// Componente para solicitação recebida (Grid)
+// # atualizado: RequestCard com PrefetchLink
 const RequestCard = React.forwardRef<HTMLDivElement, { friendship: DenormalizedFriendship; onAccept: (id: string) => void; onReject: (id: string) => void }>(
   ({ friendship, onAccept, onReject }, ref) => {
     const { friend } = friendship;
@@ -74,9 +79,13 @@ const RequestCard = React.forwardRef<HTMLDivElement, { friendship: DenormalizedF
           <OptimizedAvatar src={friend.photoURL} alt={friend.displayName} fallback={friend.displayName} size="md" className="flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-gray-900 truncate">
-              <Link to={PATHS.PROFILE({ nickname: friend.nickname })} className="hover:text-emerald-600 transition-colors">
+              <PrefetchLink
+                to={PATHS.PROFILE({ nickname: friend.nickname })}
+                query={userByNicknameQuery(friend.nickname)}
+                className="hover:text-emerald-600 transition-colors"
+              >
                 {friend.displayName}
-              </Link>
+              </PrefetchLink>
             </h3>
             <p className="text-sm text-gray-600 truncate">@{friend.nickname}</p>
           </div>
@@ -90,9 +99,8 @@ const RequestCard = React.forwardRef<HTMLDivElement, { friendship: DenormalizedF
     );
   }
 );
-RequestCard.displayName = 'RequestCard';
 
-// Componente para solicitação enviada (Grid)
+// # atualizado: SentRequestCard com PrefetchLink
 const SentRequestCard = React.forwardRef<HTMLDivElement, { friendship: DenormalizedFriendship; onCancel: (id: string) => void }>(
   ({ friendship, onCancel }, ref) => {
     const { friend } = friendship;
@@ -103,9 +111,13 @@ const SentRequestCard = React.forwardRef<HTMLDivElement, { friendship: Denormali
           <OptimizedAvatar src={friend.photoURL} alt={friend.displayName} fallback={friend.displayName} size="md" className="flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-gray-900 truncate">
-              <Link to={PATHS.PROFILE({ nickname: friend.nickname })} className="hover:text-emerald-600 transition-colors">
+              <PrefetchLink
+                to={PATHS.PROFILE({ nickname: friend.nickname })}
+                query={userByNicknameQuery(friend.nickname)}
+                className="hover:text-emerald-600 transition-colors"
+              >
                 {friend.displayName}
-              </Link>
+              </PrefetchLink>
             </h3>
             <p className="text-sm text-gray-600 truncate">@{friend.nickname}</p>
           </div>
@@ -116,25 +128,37 @@ const SentRequestCard = React.forwardRef<HTMLDivElement, { friendship: Denormali
     );
   }
 );
-SentRequestCard.displayName = 'SentRequestCard';
 
-// Componentes de Lista
+// # atualizado: FriendListItem com PrefetchLink
 const FriendListItem = ({ friendship, onAction }: { friendship: DenormalizedFriendship; onAction: (id: string) => void }) => (
   <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg">
     <OptimizedAvatar src={friendship.friend.photoURL} alt={friendship.friend.displayName} fallback={friendship.friend.displayName} size="md" />
     <div className="flex-1 min-w-0">
-      <Link to={PATHS.PROFILE({ nickname: friendship.friend.nickname })} className="font-semibold text-gray-900 truncate hover:text-emerald-600">{friendship.friend.displayName}</Link>
+      <PrefetchLink
+        to={PATHS.PROFILE({ nickname: friendship.friend.nickname })}
+        query={userByNicknameQuery(friendship.friend.nickname)}
+        className="font-semibold text-gray-900 truncate hover:text-emerald-600"
+      >
+        {friendship.friend.displayName}
+      </PrefetchLink>
       <p className="text-sm text-gray-600 truncate">@{friendship.friend.nickname}</p>
     </div>
     <Button variant="outline" size="sm" onClick={() => onAction(friendship.id)}>Remover</Button>
   </motion.div>
 );
 
+// # atualizado: RequestListItem com PrefetchLink
 const RequestListItem = ({ friendship, onAccept, onReject }: { friendship: DenormalizedFriendship; onAccept: (id: string) => void; onReject: (id: string) => void }) => (
   <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg">
     <OptimizedAvatar src={friendship.friend.photoURL} alt={friendship.friend.displayName} fallback={friendship.friend.displayName} size="md" />
     <div className="flex-1 min-w-0">
-      <Link to={PATHS.PROFILE({ nickname: friendship.friend.nickname })} className="font-semibold text-gray-900 truncate hover:text-emerald-600">{friendship.friend.displayName}</Link>
+      <PrefetchLink
+        to={PATHS.PROFILE({ nickname: friendship.friend.nickname })}
+        query={userByNicknameQuery(friendship.friend.nickname)}
+        className="font-semibold text-gray-900 truncate hover:text-emerald-600"
+      >
+        {friendship.friend.displayName}
+      </PrefetchLink>
       <p className="text-sm text-gray-600 truncate">@{friendship.friend.nickname}</p>
     </div>
     <div className="flex space-x-2">
@@ -144,11 +168,18 @@ const RequestListItem = ({ friendship, onAccept, onReject }: { friendship: Denor
   </motion.div>
 );
 
+// # atualizado: SentRequestListItem com PrefetchLink
 const SentRequestListItem = ({ friendship, onCancel }: { friendship: DenormalizedFriendship; onCancel: (id: string) => void }) => (
   <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg">
     <OptimizedAvatar src={friendship.friend.photoURL} alt={friendship.friend.displayName} fallback={friendship.friend.displayName} size="md" />
     <div className="flex-1 min-w-0">
-      <Link to={PATHS.PROFILE({ nickname: friendship.friend.nickname })} className="font-semibold text-gray-900 truncate hover:text-emerald-600">{friendship.friend.displayName}</Link>
+      <PrefetchLink
+        to={PATHS.PROFILE({ nickname: friendship.friend.nickname })}
+        query={userByNicknameQuery(friendship.friend.nickname)}
+        className="font-semibold text-gray-900 truncate hover:text-emerald-600"
+      >
+        {friendship.friend.displayName}
+      </PrefetchLink>
       <p className="text-sm text-gray-600 truncate">@{friendship.friend.nickname}</p>
     </div>
     <Button variant="secondary" size="sm" onClick={() => onCancel(friendship.id)}>Cancelar</Button>
