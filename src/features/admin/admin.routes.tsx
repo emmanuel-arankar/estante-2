@@ -1,29 +1,18 @@
-import { lazy } from 'react';
-import { Outlet, RouteObject } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { RoleProtectedRoute } from '../../router/RoleProtectedRoute';
-import { withSuspense } from '../../router/RouteSuspense';
-
-const AdminDashboard = lazy(() => import('../../pages/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
 
 /**
- * O Componente de layout para a rota '/admin'.
- * O React Router irá renderizar as rotas filhas dentro do <Outlet />.
+ * Este é o componente de layout para TODA a seção /admin.
+ * Ele garante que apenas admins possam acessar qualquer rota filha
+ * e provê um <Outlet /> para renderizar a rota filha específica.
  */
 export function Component() {
-  return <RoleProtectedRoute allowedRoles={['admin']} />;
+  return (
+    <RoleProtectedRoute allowedRoles={['admin']}>
+      <Outlet />
+    </RoleProtectedRoute>
+  );
 }
 
-/**
- * As rotas filhas que serão renderizadas dentro do layout acima.
- */
-export const children: RouteObject[] = [
-  {
-    // A rota 'index' corresponde ao caminho exato do pai, ou seja, '/admin'.
-    index: true,
-    element: withSuspense(AdminDashboard),
-    handle: {
-      title: () => 'Painel do administrador | Estante de Bolso',
-    },
-  },
-  // Futuras rotas de admin, como /admin/users, viriam aqui.
-];
+// Opcional: Adicionar um nome de exibição para facilitar a depuração
+Component.displayName = 'AdminLayout';

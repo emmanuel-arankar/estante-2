@@ -1,6 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useLocation, useOutletContext, Link } from 'react-router-dom';
-import { Search, Users, UserPlus, Clock, RefreshCw } from 'lucide-react';
+import { 
+  Search, 
+  Users, 
+  UserPlus, 
+  Clock, 
+  RefreshCw 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,7 +19,16 @@ import { formatDistanceToNow } from 'date-fns';
 import { SortDropdown } from './SortDropdown';
 import { ptBR } from 'date-fns/locale';
 import { PATHS } from '../../router/paths';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from '@/components/ui/alert-dialog';
 import { PrefetchLink } from '../ui/prefetch-link';
 import { userByNicknameQuery } from '@/features/users/user.queries';
 

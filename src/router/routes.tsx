@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 import { RouteObject, ScrollRestoration } from 'react-router-dom';
+import { PATHS } from './paths';
 
 // Layout e Utilitários
 import { Layout } from '../components/layout/Layout';
@@ -11,7 +12,7 @@ import { NotFound } from '../pages/NotFound';
 // Loaders
 import { layoutLoader } from './loaders';
 
-// # atualizado: Módulos de Rota (adminRoutes não é mais importado aqui)
+// Módulos de Rota
 import { 
   authRoutes, 
   profileRoutes, 
@@ -20,8 +21,6 @@ import {
   protectedChatRoutes, 
   notificationRoutes 
 } from '../features/routes';
-
-import { PATHS } from './paths';
 
 const Home = lazy(() => import('../pages/Home').then(module => ({ default: module.Home })));
 
@@ -59,11 +58,9 @@ export const routes: RouteObject[] = [
               ...notificationRoutes,
               ...protectedChatRoutes,
               
-              // # atualizado: Rota de admin agora usa 'lazy' para carregar sob demanda
+              // Rota de admin
               {
-                // O path base para o módulo que será carregado
                 path: 'admin',
-                // A função lazy importa o módulo SOMENTE quando /admin/* for acessado
                 lazy: () => import('../features/admin/admin.routes'),
               },
             ],
