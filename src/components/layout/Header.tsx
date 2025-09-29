@@ -11,24 +11,25 @@ import { logout } from '../../services/auth';
 import { useImageLoad } from '../../hooks/useImageLoad';
 import { subscribeToFriendRequests } from '../../services/firestore';
 import { PATHS } from '../../router/paths';
+import { User } from '@/models';
 
 // # atualizado: O Header não precisa mais receber 'profile'
 interface HeaderProps {
+  userProfile: User | null;
   initialFriendRequests: number;
 }
 
-export const Header = ({ initialFriendRequests }: HeaderProps) => {
-  // # atualizado: `user` e `profile` vêm juntos e sincronizados do hook.
-  const { user, profile } = useAuth();
+export const Header = ({ userProfile, initialFriendRequests }: HeaderProps) => {
+  const { user } = useAuth(); // Apenas para verificar se há uma sessão ativa
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [friendRequestsCount, setFriendRequestsCount] = useState(initialFriendRequests);
   
-  const { isLoaded: isAvatarLoaded } = useImageLoad(profile?.photoURL);
+  // O hook agora usa userProfile que vem das props
+  const { isLoaded: isAvatarLoaded } = useImageLoad(userProfile?.photoURL);
 
-  // ... o useEffect agora só serve para atualizações em tempo real
   useEffect(() => {
     if (!user?.uid) {
         setFriendRequestsCount(0);
@@ -63,7 +64,7 @@ export const Header = ({ initialFriendRequests }: HeaderProps) => {
     }
   };
 
-  return (
+    return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-20">
@@ -77,8 +78,8 @@ export const Header = ({ initialFriendRequests }: HeaderProps) => {
             </div>
           </Link>
 
-          {/* # atualizado: Esta condição agora é 100% confiável */}
-          {user && profile ? (
+          {/* Agora a condição usa 'user' (sessão) e 'userProfile' (dados) */}
+          {user && userProfile ? (
             <>
               <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
                 <div className="relative w-full">
@@ -110,9 +111,9 @@ export const Header = ({ initialFriendRequests }: HeaderProps) => {
                     <Button variant="ghost" size="icon" className="rounded-full">
                       {isAvatarLoaded ? (
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={profile?.photoURL} alt={profile?.displayName} />
+                          <AvatarImage src={userProfile?.photoURL} alt={userProfile?.displayName} />
                           <AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">
-                            {profile?.displayName?.charAt(0) || 'U'}
+                            {userProfile?.displayName?.charAt(0) || 'U'}
                           </AvatarFallback>
                         </Avatar>
                       ) : (
@@ -124,8 +125,8 @@ export const Header = ({ initialFriendRequests }: HeaderProps) => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="flex items-center space-x-2 p-2">
-                        <Avatar className="h-8 w-8"><AvatarImage src={profile?.photoURL} alt={profile?.displayName} /><AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">{profile?.displayName?.charAt(0) || 'U'}</AvatarFallback></Avatar>
-                        <div className="flex flex-col space-y-1"><p className="text-sm font-medium leading-none">{profile?.displayName}</p><p className="text-xs leading-none text-muted-foreground">@{profile?.nickname}</p></div>
+                        <Avatar className="h-8 w-8"><AvatarImage src={userProfile?.photoURL} alt={userProfile?.displayName} /><AvatarFallback className="bg-emerald-100 text-emerald-700 font-sans">{userProfile?.displayName?.charAt(0) || 'U'}</AvatarFallback></Avatar>
+                        <div className="flex flex-col space-y-1"><p className="text-sm font-medium leading-none">{userProfile?.displayName}</p><p className="text-xs leading-none text-muted-foreground">@{userProfile?.nickname}</p></div>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild><Link to={PATHS.PROFILE_ME} className="cursor-pointer"><UserCircle className="mr-2 h-4 w-4" /><span>Meu Perfil</span></Link></DropdownMenuItem>

@@ -1,10 +1,22 @@
 import { LoginForm } from '../components/auth/LoginForm';
 import { BookOpen } from 'lucide-react';
+import { useNavigation } from 'react-router-dom';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export const Login = () => {
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === 'submitting';
+
   return (
-    // # atualizado: O <motion.div> foi removido daqui
-    <div className="min-h-[calc(100vh-80px)] bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-4 w-full overflow-x-hidden">
+    <div className="relative min-h-[calc(100vh-80px)] bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-4 w-full overflow-x-hidden">
+      {/* Overlay de carregamento que aparece durante a submissão do formulário */}
+      {isSubmitting && (
+        <div className="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center">
+          <LoadingSpinner size="lg" className="text-emerald-600" />
+          <p className="mt-4 text-lg font-medium text-gray-700">Autenticando...</p>
+        </div>
+      )}
+
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Left side - Branding */}
         <div className="hidden lg:flex flex-col items-center justify-center text-center space-y-6">

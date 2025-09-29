@@ -5,17 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
-import { motion } from 'framer-motion';
 import { PATHS } from '../router/paths';
 
 export const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-4 w-full overflow-x-hidden">
+    <div className="relative min-h-[calc(100vh-80px)] bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-4 w-full overflow-x-hidden">
+      {/* Overlay de carregamento que aparece durante o cadastro */}
+      {isSubmitting && (
+        <div className="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center">
+          <LoadingSpinner size="lg" className="text-emerald-600" />
+          <p className="mt-4 text-lg font-medium text-gray-700">Criando sua conta...</p>
+        </div>
+      )}
+
       <div className="w-full max-w-md">
         <Card className="w-full shadow-lg border-0">
           <CardHeader className="space-y-1 text-center">

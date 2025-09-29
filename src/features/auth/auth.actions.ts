@@ -28,10 +28,8 @@ export const loginAction = async ({ request }: any) => {
     );
     const user = userCredential.user;
     const profileData = await queryClient.fetchQuery(userQuery(user.uid));
-    toastSuccessClickable(`Bem-vindo(a) de volta, ${profileData.displayName}!`);
-    
-    // # atualizado: Se o redirecionamento for para a home, vai para o perfil.
-    // Caso contrário, respeita a rota original que o usuário tentou acessar.
+    sessionStorage.setItem('showLoginSuccessToast', `Bem-vindo(a) de volta, ${profileData.displayName}!`);
+
     const finalRedirectTo = (redirectTo as string) === '/' ? PATHS.PROFILE_ME : (redirectTo as string);
     return redirect(finalRedirectTo);
   } catch (error: any) {
@@ -76,7 +74,7 @@ export const registerAction = async ({ request }: any) => {
       id: user.uid,
       ...newProfileData,
     });
-    toastSuccessClickable(`Conta criada com sucesso, ${displayName}!`);
+    sessionStorage.setItem('showLoginSuccessToast', `Conta criada com sucesso, ${displayName}!`);
     return redirect(PATHS.PROFILE_ME);
   } catch (error: any) {
     toastErrorClickable(

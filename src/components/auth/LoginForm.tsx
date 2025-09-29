@@ -58,9 +58,9 @@ export const LoginForm = () => {
         };
 
         await setDoc(userDocRef, newProfileData);
-        toastSuccessClickable(`Bem-vindo(a), ${user.displayName}! Sua conta foi criada.`);
+        //toastSuccessClickable(`Bem-vindo(a), ${user.displayName}! Sua conta foi criada.`);
       } else {
-        toastSuccessClickable(`Bem-vindo(a) de volta, ${user.displayName}!`);
+        //toastSuccessClickable(`Bem-vindo(a) de volta, ${user.displayName}!`);
       }
       
       navigate(PATHS.PROFILE_ME);

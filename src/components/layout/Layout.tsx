@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { mainPageFadeVariants, MAIN_PAGE_TRANSITION } from '../../lib/animations';
 import { PATHS } from '@/router/paths';
 import { FocusManager } from '@/router/FocusManager';
+import { User } from '@/models';
+import { toastSuccessClickable } from '../ui/toast';
 
 // Hook customizado para gerenciar o título da página
 const usePageTitle = () => {
@@ -31,26 +33,35 @@ const usePageTitle = () => {
   }, [matches]); // Re-executa sempre que as rotas ativas mudarem
 };
 
+// Definir a interface para os dados do loader
 interface LayoutData {
+  userProfile: User | null;
   initialFriendRequests: number;
 }
 
 export const Layout = () => {
-  const { initialFriendRequests } = useLoaderData() as LayoutData;
+  const { userProfile, initialFriendRequests } = useLoaderData() as LayoutData;
   const { loading: authLoading } = useAuth();
   const location = useLocation();
-  const navigation = useNavigation(); // # atualizado
-  const isLoading = navigation.state === 'loading'; // # atualizado
+  const navigation = useNavigation();
+  const isLoading = navigation.state === 'loading';
 
   usePageTitle();
 
-  // # atualizado: A chave de animação voltou a ser baseada na seção principal da URL (ex: "profile", "friends").
-  // Isso impede que a página inteira anime ao trocar de abas internas.
-  const pageKey = location.pathname.split('/')[1] || 'home';
+  useEffect(() => {
+    const toastMessage = sessionStorage.getItem('showLoginSuccessToast');
+    if (toastMessage) {
+      toastSuccessClickable(toastMessage);
+      sessionStorage.removeItem('showLoginSuccessToast');
+    }
+    // Dispara a verificação a cada mudança de página
+  }, [location]);
 
+  const pageKey = location.pathname.split('/')[1] || 'home';
   const noFooterPaths = [PATHS.LOGIN, PATHS.REGISTER, PATHS.FORGOT_PASSWORD];
   const shouldShowFooter = !noFooterPaths.includes(location.pathname);
 
+  // O spinner de tela cheia agora só aparece durante a verificação inicial
   if (authLoading) {
     return (
       <div className="h-screen flex items-center justify-center">
@@ -59,17 +70,17 @@ export const Layout = () => {
     );
   }
 
-    return (
+  return (
     <div className="flex flex-col min-h-screen bg-gray-50 w-full overflow-x-hidden">
       <FocusManager />
-      {/* # atualizado: Indicador de carregamento global */}
       <div
         className={`fixed top-0 left-0 right-0 h-1 bg-emerald-500 z-[99] transition-transform duration-300 ${
           isLoading ? 'scale-x-100' : 'scale-x-0'
         }`}
         style={{ transformOrigin: 'left' }}
       />
-      <Header initialFriendRequests={initialFriendRequests} />
+      {/* Passar o perfil do usuário para o Header */}
+      <Header userProfile={userProfile} initialFriendRequests={initialFriendRequests} />
       <main className="flex-1 w-full pt-20 grid">
         <AnimatePresence initial={false}>
           <motion.div
