@@ -11,13 +11,15 @@ import { NotFound } from '../pages/NotFound';
 // Loaders
 import { layoutLoader } from './loaders';
 
-// Módulos de Rota
-import { authRoutes } from '../features/auth/auth.routes';
-import { profileRoutes, protectedProfileRoutes } from '../features/profile/profile.routes';
-import { friendsRoutes } from '../features/friends/friends.routes';
-import { protectedChatRoutes } from '../features/chat/chat.routes';
-import { notificationRoutes } from '../features/notifications/notifications.routes';
-import { adminRoutes } from '../features/admin/admin.routes';
+// # atualizado: Módulos de Rota (adminRoutes não é mais importado aqui)
+import { 
+  authRoutes, 
+  profileRoutes, 
+  protectedProfileRoutes, 
+  friendsRoutes, 
+  protectedChatRoutes, 
+  notificationRoutes 
+} from '../features/routes';
 
 import { PATHS } from './paths';
 
@@ -56,7 +58,14 @@ export const routes: RouteObject[] = [
               ...friendsRoutes,
               ...notificationRoutes,
               ...protectedChatRoutes,
-              adminRoutes,
+              
+              // # atualizado: Rota de admin agora usa 'lazy' para carregar sob demanda
+              {
+                // O path base para o módulo que será carregado
+                path: 'admin',
+                // A função lazy importa o módulo SOMENTE quando /admin/* for acessado
+                lazy: () => import('../features/admin/admin.routes'),
+              },
             ],
           },
         ],
