@@ -13,8 +13,8 @@ interface PageMetadataProps {
 
 const SITE_URL = 'https://estante-virtual-805ef.web.app/';
 const SITE_NAME = 'Estante de Bolso';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/logo-og.png`;
-const TWITTER_HANDLE = '@EstanteDeBolso'; 
+const DEFAULT_OG_IMAGE = `${SITE_URL}og-image.png`;
+const TWITTER_HANDLE = '@EstanteDeBolso';
 
 export const PageMetadata = ({ title, description, ogTitle, ogDescription, image, noIndex, schema }: PageMetadataProps) => {
   const location = useLocation();
