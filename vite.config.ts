@@ -1,16 +1,22 @@
-import path from 'path';
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
-  optimizeDeps: {
-    exclude: ['lucide-react'],
+  // # atualizado: Adicione esta seção inteira
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:5001/estante-virtual-805ef/us-central1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
 });
