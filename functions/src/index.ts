@@ -1,30 +1,55 @@
+import * as functions from "firebase-functions";
+import * as admin from "firebase-admin";
+import cors from "cors";
+
+// Inicializa o Firebase Admin SDK
+admin.initializeApp();
+
+const corsHandler = cors({ origin: true });
+
 /**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
+ * Cria um cookie de sessão a partir de um ID token do Firebase.
+ * O frontend envia o ID token, e esta função retorna um cookie HTTP Only.
  */
+export const sessionLogin = functions.https.onRequest((request, response) => {
+  corsHandler(request, response, async () => {
+    if (request.method !== "POST") {
+      response.status(405).send("Method Not Allowed");
+      return;
+    }
 
-import {setGlobalOptions} from "firebase-functions";
+    const { idToken } = request.body;
+    if (!idToken) {
+      response.status(400).send("ID token não fornecido.");
+      return;
+    }
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
+    // O cookie de sessão expira em 14 dias.
+    const expiresIn = 60 * 60 * 24 * 14 * 1000;
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+    try {
+      // Cria o cookie de sessão.
+      const sessionCookie = await admin
+        .auth()
+        .createSessionCookie(idToken, { expiresIn });
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+      // Configura o cookie no navegador do cliente.
+      const options = { maxAge: expiresIn, httpOnly: true, secure: false };
+      response.cookie("__session", sessionCookie, options);
+      response.status(200).send({ status: "success" });
+    } catch (error) {
+      console.error("Erro ao criar cookie de sessão:", error);
+      response.status(401).send("Falha na autenticação.");
+    }
+  });
+});
+
+/**
+ * Desconecta o usuário limpando o cookie de sessão.
+ */
+export const sessionLogout = functions.https.onRequest((request, response) => {
+  corsHandler(request, response, async () => {
+    response.clearCookie("__session");
+    response.status(200).send({ status: "success" });
+  });
+});
