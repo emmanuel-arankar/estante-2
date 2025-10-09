@@ -9,7 +9,6 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // # atualizado: Adicione esta seção que estava faltando
   server: {
     proxy: {
       '/api': {

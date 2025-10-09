@@ -1,5 +1,6 @@
+// # atualizado: Substitua todo o conteúdo do arquivo por este
+
 import { signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { auth } from './firebase';
 import { useAuthStore } from '../stores/authStore';
 import { toastSuccessClickable, toastErrorClickable } from '@/components/ui/toast';
@@ -9,24 +10,42 @@ import { queryClient } from '@/lib/queryClient';
 export const setSessionCookie = async (user: FirebaseUser) => {
   try {
     const idToken = await user.getIdToken(true);
-    const functions = getFunctions();
-    const createSessionCookie = httpsCallable(functions, 'createSessionCookie');
-    await createSessionCookie({ idToken });
-    
+
+    // Usa fetch para chamar a API através do proxy do Vite
+    const response = await fetch('/api/sessionLogin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ idToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error('A resposta da rede não foi ok');
+    }
+
     localStorage.setItem('session', 'true');
   } catch (error) {
     console.error("Falha ao definir o cookie de sessão:", error);
     localStorage.removeItem('session');
+    // Re-lança o erro para que a ação de login saiba que falhou
+    throw error;
   }
 };
 
 export const logout = async () => {
   try {
     console.log('🚪 Iniciando logout...');
+    
+    // Chama a função de logout do backend para limpar o cookie
+    await fetch('/api/sessionLogout', { method: 'POST' });
+
+    // Limpa o estado local
     await signOut(auth);
     localStorage.removeItem('session');
     useAuthStore.getState().clearAuth();
     queryClient.clear();
+    
     console.log('✅ Logout realizado com sucesso');
     toastSuccessClickable('Logout realizado com sucesso!');
   } catch (error) {
@@ -35,6 +54,8 @@ export const logout = async () => {
     throw error;
   }
 };
+
+// --- O resto do arquivo permanece o mesmo ---
 
 const authReadyPromise = new Promise<FirebaseUser | null>(resolve => {
   const unsubscribe = onAuthStateChanged(auth, user => {
