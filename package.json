@@ -10,7 +10,8 @@
     "build": "npm run build:client && npm run build:server && npm run build:functions",
     "build:functions": "npm install --prefix functions && npm run build --prefix functions",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "serve": "npm run build && firebase emulators:start"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
