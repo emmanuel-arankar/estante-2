@@ -1,22 +1,33 @@
-import { useState } from 'react'; // # atualizado
-import { Form, Link, useNavigation, useNavigate, useLocation } from 'react-router-dom'; // # atualizado
+import { useState } from 'react';
+import { Form, Link, useNavigation, useNavigate, useLocation } from 'react-router-dom'; 
 import { Eye, EyeOff, Mail, Lock, Chrome } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { LoadingSpinner } from '../ui/loading-spinner';
-import { PATHS } from '../../router/paths';
-import { GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo } from 'firebase/auth'; // # atualizado
-import { auth, db } from '../../services/firebase'; // # atualizado
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { PATHS } from '@/router/paths';
+import { 
+  GoogleAuthProvider, 
+  signInWithPopup,
+  getAdditionalUserInfo 
+} from 'firebase/auth'; // # atualizado
+import { auth, db } from '@/services/firebase'; // # atualizado
 import { doc, setDoc } from 'firebase/firestore';
-import { generateUniqueNickname } from '../../utils/nickname'; // # atualizado
-import { toastSuccessClickable, toastErrorClickable } from '../ui/toast'; // # atualizado
-import { User } from '../../models'; // # atualizado
+import { generateUniqueNickname } from '@/utils/nickname'; // # atualizado
+import { toastSuccessClickable, toastErrorClickable } from '@/components/ui/toast'; // # atualizado
+import { User } from '@/models'; // # atualizado
+import { Label } from "@/components/ui/label";
 
 export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigation = useNavigation();
   const navigate = useNavigate(); // # atualizado
   const location = useLocation(); // # atualizado
@@ -123,10 +134,15 @@ export const LoginForm = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <label className="flex items-center space-x-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 font-sans cursor-pointer">
-              <Checkbox id="rememberMe" name="rememberMe" />
-              <span>Lembrar-me</span>
-            </label>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              />
+              <Label htmlFor="rememberMe" className="cursor-pointer">
+                Lembrar de mim
+              </Label>
+            </div>
             <Link
               to={PATHS.FORGOT_PASSWORD}
               className="text-sm text-emerald-600 hover:underline font-sans"
