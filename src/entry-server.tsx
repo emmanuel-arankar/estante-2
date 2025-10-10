@@ -45,40 +45,35 @@ export async function render({ url, res, template }: RenderProps) {
     </React.StrictMode>
   );
 
-  const stream = ReactDOMServer.renderToPipeableStream(App, {
+  const { pipe } = ReactDOMServer.renderToPipeableStream(App, {
     bootstrapScripts: ['/entry-client.js'],
     onShellReady() {
-      // Pega o HTML renderizado e o estado do React Query
+      // # atualizado: Lógica de streaming simplificada e corrigida
+      res.statusCode = 200;
+      res.setHeader('Content-type', 'text/html');
+
       const dehydratedState = dehydrate(queryClient);
       const { helmet } = helmetContext;
 
-      // Monta as tags do head
-      const head = `
-        ${helmet.title.toString()}
-        ${helmet.meta.toString()}
-        ${helmet.link.toString()}
-      `;
+      const head = `${helmet.title.toString()}${helmet.meta.toString()}${helmet.link.toString()}`;
 
-      // Injeta tudo no template HTML
-      let html = template
+      // Substitui os placeholders no template
+      const htmlStart = template
         .replace(``, head)
         .replace(
           ``,
-          `<div id="root">` // O div root é inserido aqui
+          `<div id="root">`
         )
         .replace(
-          '</body>',
-          `<script>window.__DEHYDRATED_STATE__ = ${JSON.stringify(dehydratedState)};</script></body>`
+            '</body>',
+            `<script>window.__DEHYDRATED_STATE__ = ${JSON.stringify(dehydratedState)};</script></body>`
         );
+        
+      // Envia o início do HTML antes do conteúdo do React
+      res.write(htmlStart.split('</div>')[0] + '</div>');
       
-      res.statusCode = 200;
-      res.setHeader('Content-type', 'text/html');
-      
-      // Envia o início do HTML
-      res.write(html.split('</div>')[0] + '</div>');
-      
-      // Envia o resto do HTML em streaming
-      stream.pipe(res);
+      // Conecta o stream do React ao stream da resposta
+      pipe(res);
     },
     onError(error) {
       console.error('Erro de Stream:', error);
