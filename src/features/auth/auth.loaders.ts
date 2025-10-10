@@ -1,16 +1,36 @@
-import { redirect } from 'react-router-dom';
-import { awaitAuthReady, getCurrentUser } from '../../services/auth';
-import { PATHS } from '../../router/paths';
+import { redirect } from "react-router-dom";
+import { PATHS } from "@/router/paths";
+// # atualizado: Importa a função correta do seu arquivo de autenticação
+import { awaitAuthReady } from "@/services/auth"; 
+import { authStore } from "@/stores/authStore";
 
-export const publicOnlyLoader = async () => {
-  // # atualizado: Aguarda a verificação inicial de autenticação do Firebase
-  await awaitAuthReady();
-  
-  const user = getCurrentUser();
-  if (user) {
-    // Se o usuário já está logado, redireciona para a página de perfil
-    return redirect(PATHS.PROFILE_ME);
+export const rootLoader = async () => {
+  // No servidor (SSR), a store já foi preenchida pela Cloud Function.
+  // Usamos esses dados diretamente para uma resposta instantânea.
+  if (import.meta.env.SSR) {
+    const user = authStore.getState().user;
+    return { user };
   }
-  
-  return null; // Permite o acesso se não houver usuário
+
+  // No cliente, esperamos a verificação inicial do Firebase Auth terminar.
+  // Isso garante que sabemos o status de login antes de continuar.
+  const user = await awaitAuthReady();
+  return { user };
+};
+
+// # atualizado: Os loaders de login/registro também devem usar awaitAuthReady
+export const loginLoader = async () => {
+  const user = await awaitAuthReady();
+  if (user) {
+    return redirect(PATHS.HOME);
+  }
+  return null;
+};
+
+export const registerLoader = async () => {
+  const user = await awaitAuthReady();
+  if (user) {
+    return redirect(PATHS.HOME);
+  }
+  return null;
 };

@@ -1,5 +1,3 @@
-// # atualizado: Substitua todo o conteúdo do arquivo por este
-
 import { signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from './firebase';
 import { useAuthStore } from '../stores/authStore';
@@ -54,8 +52,6 @@ export const logout = async () => {
     throw error;
   }
 };
-
-// --- O resto do arquivo permanece o mesmo ---
 
 const authReadyPromise = new Promise<FirebaseUser | null>(resolve => {
   const unsubscribe = onAuthStateChanged(auth, user => {
