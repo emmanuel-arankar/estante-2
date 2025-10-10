@@ -6,10 +6,10 @@ import { queryClient } from "@/lib/queryClient";
 import { userQuery } from "@/features/users/user.queries";
 import { getPendingRequestCount } from "@/services/firestore";
 import { User } from "@/models";
+import { User as FirebaseUser } from "firebase/auth";
 
-// Loader para rotas que só podem ser acessadas por usuários deslogados
 export const publicOnlyLoader = async () => {
-  // No servidor, a verificação é instantânea a partir da store
+  // No servidor, a verificação é instantânea
   if (import.meta.env.SSR) {
     if (authStore.getState().profile) {
       return redirect(PATHS.HOME);
@@ -25,53 +25,50 @@ export const publicOnlyLoader = async () => {
   return null;
 };
 
-// Loader principal da aplicação, executado em todas as rotas
+// # ATUALIZADO: Este é o loader que substitui o layoutLoader
 export const rootLoader = async () => {
-  // --- LÓGICA DO SERVIDOR (PARA SSR RÁPIDO) ---
+  // LÓGICA DO SERVIDOR
   if (import.meta.env.SSR) {
     const profile = authStore.getState().profile;
-
-    // Se não há perfil na store do servidor, não há usuário logado.
     if (!profile) {
-      return { user: null, profile: null, initialFriendRequests: 0 };
+      return { profile: null, initialFriendRequests: 0 };
     }
-    
-    // Se há perfil, ADIAMOS (defer) o carregamento dos dados secundários
-    // para não bloquear o streaming. Isso é a chave para o TTFB baixo.
     const friendRequestsPromise = getPendingRequestCount(profile.id);
-    
     return defer({
-      user: null, // O user (firebase) não é serializável, usamos o profile
       profile,
       initialFriendRequests: friendRequestsPromise,
     });
   }
 
-  // --- LÓGICA DO CLIENTE (PARA NAVEGAÇÃO E HIDRATAÇÃO) ---
+  // LÓGICA DO CLIENTE
   const firebaseUser = await awaitAuthReady();
-  
-  // Se não há usuário do firebase, limpa a store e retorna nulo
   if (!firebaseUser) {
     authStore.getState().clearAuth();
-    return { user: null, profile: null, initialFriendRequests: 0 };
+    return { profile: null, initialFriendRequests: 0 };
   }
 
-  // Se há usuário, busca o perfil e os dados do layout
+  // Se o perfil já está na store, evita busca desnecessária
+  const existingProfile = authStore.getState().profile;
+  if (existingProfile && existingProfile.id === firebaseUser.uid) {
+    const initialFriendRequests = await getPendingRequestCount(firebaseUser.uid);
+    return { profile: existingProfile, initialFriendRequests };
+  }
+
+  // Se não, busca tudo
   try {
     const [profile, initialFriendRequests] = await Promise.all([
       queryClient.ensureQueryData(userQuery(firebaseUser.uid)),
-      getPendingRequestCount(firebaseUser.uid)
+      getPendingRequestCount(firebaseUser.uid),
     ]);
 
-    // Sincroniza a store com os dados frescos
     authStore.getState().setUser(firebaseUser);
     authStore.getState().setProfile(profile as User);
     
-    return { user: firebaseUser, profile, initialFriendRequests };
-
+    return { profile, initialFriendRequests };
   } catch (error) {
     console.error("Erro no rootLoader do cliente:", error);
     authStore.getState().clearAuth();
-    return { user: null, profile: null, initialFriendRequests: 0 };
+    await fetch('/api/sessionLogout', { method: 'POST' });
+    return { profile: null, initialFriendRequests: 0 };
   }
 };
