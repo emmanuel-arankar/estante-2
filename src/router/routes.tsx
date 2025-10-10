@@ -10,7 +10,7 @@ import { withSuspense } from './RouteSuspense';
 import { NotFound } from '../pages/NotFound';
 
 // Loaders
-import { layoutLoader } from './loaders';
+import { rootLoader } from '../features/auth/auth.loaders';
 
 // Módulos de Rota
 import { 
@@ -34,7 +34,7 @@ export const routes: RouteObject[] = [
       </>
     ),
     errorElement: <NotFound />,
-    loader: layoutLoader,
+    loader: rootLoader,
     children: [
       // --- Rotas de Tela Cheia (sem container) ---
       {

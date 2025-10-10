@@ -1,36 +1,50 @@
-import { redirect } from "react-router-dom";
+import { defer, redirect } from "react-router-dom";
 import { PATHS } from "@/router/paths";
-// # atualizado: Importa a função correta do seu arquivo de autenticação
-import { awaitAuthReady } from "@/services/auth"; 
+import { awaitAuthReady } from "@/services/auth";
 import { authStore } from "@/stores/authStore";
+import { queryClient } from "@/lib/queryClient"; // # atualizado: Importa queryClient
+import { userQuery } from "@/features/users/user.queries"; // # atualizado: Importa userQuery
+import { getPendingRequestCount } from "@/services/firestore"; // # atualizado: Importa a contagem
+
+// # atualizado: Loader unificado para rotas públicas
+export const publicOnlyLoader = async () => {
+  const user = await awaitAuthReady();
+  if (user) {
+    return redirect(PATHS.HOME);
+  }
+  return null;
+};
 
 export const rootLoader = async () => {
-  // No servidor (SSR), a store já foi preenchida pela Cloud Function.
-  // Usamos esses dados diretamente para uma resposta instantânea.
+  // --- LÓGICA DO SERVIDOR (SSR) ---
   if (import.meta.env.SSR) {
     const user = authStore.getState().user;
-    return { user };
+    if (!user) {
+      return { user: null, userProfile: null, initialFriendRequests: 0 };
+    }
+    // No servidor, ADIAMOS (defer) o carregamento do perfil e das solicitações
+    // para não bloquear o streaming.
+    const userProfilePromise = queryClient.ensureQueryData(userQuery(user.uid));
+    const friendRequestsPromise = getPendingRequestCount(user.uid);
+    
+    return defer({
+      user,
+      userProfile: userProfilePromise,
+      initialFriendRequests: friendRequestsPromise,
+    });
   }
 
-  // No cliente, esperamos a verificação inicial do Firebase Auth terminar.
-  // Isso garante que sabemos o status de login antes de continuar.
+  // --- LÓGICA DO CLIENTE ---
   const user = await awaitAuthReady();
-  return { user };
-};
-
-// # atualizado: Os loaders de login/registro também devem usar awaitAuthReady
-export const loginLoader = async () => {
-  const user = await awaitAuthReady();
-  if (user) {
-    return redirect(PATHS.HOME);
+  if (!user) {
+    return { user: null, userProfile: null, initialFriendRequests: 0 };
   }
-  return null;
-};
 
-export const registerLoader = async () => {
-  const user = await awaitAuthReady();
-  if (user) {
-    return redirect(PATHS.HOME);
-  }
-  return null;
+  // No cliente, fazemos o mesmo que o layoutLoader fazia.
+  const [userProfile, initialFriendRequests] = await Promise.all([
+    queryClient.ensureQueryData(userQuery(user.uid)),
+    getPendingRequestCount(user.uid)
+  ]);
+  
+  return { user, userProfile, initialFriendRequests };
 };
