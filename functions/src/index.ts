@@ -4,9 +4,11 @@ import express from "express";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
+import cookieParser from "cookie-parser";
+
 // @ts-ignore - Permite importar o arquivo JS gerado pelo build do Vite
 import { render } from "../dist/server/entry-server.js";
-import cookieParser from "cookie-parser";
+import { User } from "@/models";
 
 // Conecta o Admin SDK aos emuladores se estiver em ambiente local
 if (process.env.FUNCTIONS_EMULATOR) {
@@ -74,35 +76,28 @@ app.use(cookieParser());
 app.get("*", async (req, res) => {
   try {
     const sessionCookie = req.cookies.__session || "";
-    let user = null;
+    let profile = null;
 
     try {
       const decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
-      
-      // # atualizado: Busca o perfil completo do usuário no Firestore
       const userDoc = await admin.firestore().collection("users").doc(decodedClaims.uid).get();
 
       if (userDoc.exists) {
         const userData = userDoc.data()!;
-        user = {
-          // Propriedades do FirebaseUser (vêm do cookie)
-          uid: decodedClaims.uid,
-          email: decodedClaims.email,
-          emailVerified: decodedClaims.email_verified,
-
-          // Propriedades do seu 'User' (vêm do Firestore)
+        // # atualizado: Monta o objeto 'profile' com o tipo 'User' correto.
+        // Não tentamos mais simular um FirebaseUser.
+        profile = {
           id: userDoc.id,
-          displayName: userData.displayName,
-          nickname: userData.nickname,
-          photoURL: userData.photoURL,
-          role: userData.role, 
+          ...userData,
           createdAt: userData.createdAt.toDate(),
           updatedAt: userData.updatedAt.toDate(),
-        };
+          // Garanta que todos os campos de data sejam convertidos com .toDate()
+        } as User;
       }
     } catch (error) {
-      user = null;
+      profile = null;
     }
+
 
     const template = fs.readFileSync(
       path.resolve(__dirname, "../dist/client/index.html"),
@@ -110,7 +105,7 @@ app.get("*", async (req, res) => {
     );
 
     // # atualizado: Passa o objeto 'user' para a função render
-    const { pipe, abort } = await render(req, user, {
+    const { pipe, abort } = await render(req, profile, {
       onShellReady() {
         res.statusCode = 200;
         res.setHeader("Content-type", "text/html");

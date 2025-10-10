@@ -8,10 +8,31 @@ import { getPendingRequestCount } from "@/services/firestore"; // # atualizado: 
 
 // # atualizado: Loader unificado para rotas públicas
 export const publicOnlyLoader = async () => {
+  // 1. Lógica para o Servidor (SSR)
+  // No servidor, lemos diretamente da store que já foi preenchida
+  if (import.meta.env.SSR) {
+    const user = authStore.getState().user;
+    if (user) {
+      return redirect(PATHS.HOME);
+    }
+    return null;
+  }
+
+  // 2. Lógica para o Cliente (Navegação)
+  // Para cliques após o app carregar, a store já está sincronizada.
+  // Esta verificação síncrona é instantânea e resolve o "engasgo".
+  const userInStore = authStore.getState().user;
+  if (userInStore) {
+    return redirect(PATHS.HOME);
+  }
+
+  // 3. Fallback para o carregamento inicial do cliente
+  // Se a store ainda estiver vazia (caso raro), esperamos a verificação inicial.
   const user = await awaitAuthReady();
   if (user) {
     return redirect(PATHS.HOME);
   }
+
   return null;
 };
 

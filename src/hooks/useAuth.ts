@@ -3,32 +3,59 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useAuthStore } from '../stores/authStore';
 import { setSessionCookie } from '@/services/auth';
+import { queryClient } from '@/lib/queryClient';
+import { userQuery } from '@/features/users/user.queries';
+import { User } from '@/models';
 
 export const useAuth = () => {
+  // # atualizado: Pega os novos estados e ações da store
   const {
-    user,
+    user: firebaseUser,
+    profile,
     loading,
     error,
     setUser,
+    setProfile,
     setLoading,
+    clearAuth,
   } = useAuthStore();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
-      
-      if (firebaseUser) {
-        await setSessionCookie(firebaseUser);
+    // # atualizado: Apenas executa no lado do cliente
+    if (import.meta.env.SSR) return;
+
+    const unsubscribe = onAuthStateChanged(auth, async (newFirebaseUser) => {
+      setUser(newFirebaseUser);
+
+      if (newFirebaseUser) {
+        // Se o usuário logou...
+        try {
+          // 1. Cria o cookie de sessão para o SSR funcionar
+          await setSessionCookie(newFirebaseUser);
+
+          // 2. Busca o perfil completo do Firestore
+          const userProfile = await queryClient.fetchQuery(userQuery(newFirebaseUser.uid));
+          setProfile(userProfile as User);
+
+        } catch (e) {
+          console.error("Falha ao buscar perfil ou criar sessão:", e);
+          // Se algo der errado (ex: perfil não encontrado), desloga para evitar estado quebrado
+          clearAuth();
+          await fetch('/api/sessionLogout', { method: 'POST' });
+        }
       } else {
-        // Se deslogou, chama nossa API para limpar o cookie
+        // Se o usuário deslogou, limpa tudo
         await fetch('/api/sessionLogout', { method: 'POST' });
+        clearAuth();
       }
+
+      setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [setUser, setLoading]);
+  }, [setUser, setProfile, setLoading, clearAuth]);
 
-  // Retorna apenas o usuário do Firebase e o estado de carregamento do auth
-  return { user, loading, error };
+  // # atualizado: O 'usuário' da aplicação agora é o 'profile'.
+  // Retornamos ambos para flexibilidade.
+  return { user: profile, firebaseUser, loading, error };
 };
