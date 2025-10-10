@@ -64,3 +64,28 @@ export const sessionLogout = functions.https.onRequest((request, response) => {
     response.status(200).send({ status: "success" });
   });
 });
+
+// # atualizado: Adicione 'fs' e 'path' para ler o arquivo
+import * as fs from 'fs';
+import * as path from 'path';
+
+const ssrRender = require('../../dist/server/entry-server.js').render;
+
+// Lê o template index.html uma vez quando a função inicia
+const template = fs.readFileSync(path.resolve(__dirname, '../../dist/client/index.html'), 'utf-8');
+
+export const ssr = functions.https.onRequest(async (request, response) => {
+  try {
+    // # atualizado: Passa o template para a função de renderização
+    await ssrRender({
+      url: request.originalUrl,
+      res: response,
+      template,
+    });
+  } catch (error) {
+    console.error("Erro fatal na função SSR:", error);
+    if (!response.headersSent) {
+      response.status(500).send("Ocorreu um erro interno no servidor.");
+    }
+  }
+});
