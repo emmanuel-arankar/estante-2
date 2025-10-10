@@ -8,6 +8,8 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routes } from "./router/routes";
 import type { Request as ExpressRequest } from "express"; // # atualizado
+import { authStore, AuthUser } from "./stores/authStore";
+import { User } from "./models";
 
 function createFetchRequest(req: ExpressRequest): Request {
   const origin = `${req.protocol}://${req.get("host")}`;
@@ -42,19 +44,23 @@ function createFetchRequest(req: ExpressRequest): Request {
   return new Request(url.href, init);
 }
 
+// # atualizado: A função 'render' agora aceita o usuário e as opções
 export async function render(
   req: ExpressRequest,
+  user: AuthUser | null,
   options: ReactDOMServer.RenderToPipeableStreamOptions
 ) {
+  // # atualizado: Seta o usuário e para o loading. ESTA É A CHAVE!
+  authStore.getState().setUser(user);
+  authStore.getState().setLoading(false); 
+
   const queryClient = new QueryClient();
   const handler = createStaticHandler(routes);
 
   const fetchRequest = createFetchRequest(req);
   const context = await handler.query(fetchRequest);
 
-  // # atualizado: Adiciona a verificação para redirecionamentos
   if (context instanceof Response) {
-    // Se for uma resposta (ex: redirect), lança para o Express/Firebase tratar
     throw context;
   }
 

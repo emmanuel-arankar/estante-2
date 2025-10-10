@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 // @ts-ignore - Permite importar o arquivo JS gerado pelo build do Vite
 import { render } from "../dist/server/entry-server.js";
+import cookieParser from "cookie-parser";
 
 // Conecta o Admin SDK aos emuladores se estiver em ambiente local
 if (process.env.FUNCTIONS_EMULATOR) {
@@ -14,7 +15,7 @@ if (process.env.FUNCTIONS_EMULATOR) {
   process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
   process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
   process.env.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
-  
+
   console.log("✅ Conectado o Cloud Functions aos emuladores.");
 }
 
@@ -66,20 +67,50 @@ export const sessionLogout = functions.https.onRequest((request, response) => {
 // --- Função Principal de Server-Side Rendering (SSR) ---
 
 const app = express();
-
-// Aplica o CORS a todas as rotas do app SSR, se necessário.
-// Se o seu app e functions estão no mesmo domínio, isso pode não ser estritamente necessário.
 app.use(cors({ origin: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("*", async (req, res) => {
   try {
+    const sessionCookie = req.cookies.__session || "";
+    let user = null;
+
+    try {
+      const decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
+      
+      // # atualizado: Busca o perfil completo do usuário no Firestore
+      const userDoc = await admin.firestore().collection("users").doc(decodedClaims.uid).get();
+
+      if (userDoc.exists) {
+        const userData = userDoc.data()!;
+        user = {
+          // Propriedades do FirebaseUser (vêm do cookie)
+          uid: decodedClaims.uid,
+          email: decodedClaims.email,
+          emailVerified: decodedClaims.email_verified,
+
+          // Propriedades do seu 'User' (vêm do Firestore)
+          id: userDoc.id,
+          displayName: userData.displayName,
+          nickname: userData.nickname,
+          photoURL: userData.photoURL,
+          role: userData.role, 
+          createdAt: userData.createdAt.toDate(),
+          updatedAt: userData.updatedAt.toDate(),
+        };
+      }
+    } catch (error) {
+      user = null;
+    }
+
     const template = fs.readFileSync(
       path.resolve(__dirname, "../dist/client/index.html"),
       "utf-8"
     );
 
-    const { pipe, abort } = await render(req, {
+    // # atualizado: Passa o objeto 'user' para a função render
+    const { pipe, abort } = await render(req, user, {
       onShellReady() {
         res.statusCode = 200;
         res.setHeader("Content-type", "text/html");
