@@ -1,85 +1,77 @@
-import React from 'react';
-import ReactDOMServer from 'react-dom/server';
+import React from "react";
+import ReactDOMServer from "react-dom/server";
 import {
   createStaticHandler,
   createStaticRouter,
   StaticRouterProvider,
-} from 'react-router-dom/server';
-import { routes } from './router/routes';
-import { QueryClient, QueryClientProvider, dehydrate } from '@tanstack/react-query';
-import type { Response } from 'express';
-import { HelmetProvider } from 'react-helmet-async';
+} from "react-router-dom/server";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { routes } from "./router/routes";
+import type { Request as ExpressRequest } from "express"; // # atualizado
 
-interface RenderProps {
-  url: string;
-  res: Response;
-  template: string;
+function createFetchRequest(req: ExpressRequest): Request {
+  const origin = `${req.protocol}://${req.get("host")}`;
+  const url = new URL(req.originalUrl || req.url, origin);
+
+  const controller = new AbortController();
+  req.on("close", () => controller.abort());
+
+  const headers = new Headers();
+  for (const [key, values] of Object.entries(req.headers)) {
+    if (values) {
+      if (Array.isArray(values)) {
+        for (const value of values) {
+          headers.append(key, value);
+        }
+      } else {
+        headers.set(key, values as string);
+      }
+    }
+  }
+
+  const init: RequestInit = {
+    method: req.method,
+    headers,
+    signal: controller.signal,
+  };
+
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    init.body = req.body;
+  }
+
+  return new Request(url.href, init);
 }
 
-export async function render({ url, res, template }: RenderProps) {
-  const handler = createStaticHandler(routes);
+export async function render(
+  req: ExpressRequest,
+  options: ReactDOMServer.RenderToPipeableStreamOptions
+) {
   const queryClient = new QueryClient();
+  const handler = createStaticHandler(routes);
 
-  const fetchRequest = new Request(new URL(url, 'http://localhost'), {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-  });
-
+  const fetchRequest = createFetchRequest(req);
   const context = await handler.query(fetchRequest);
 
+  // # atualizado: Adiciona a verificação para redirecionamentos
   if (context instanceof Response) {
-    res.redirect(context.status, context.headers.get('Location') || '/');
-    return;
+    // Se for uma resposta (ex: redirect), lança para o Express/Firebase tratar
+    throw context;
   }
 
   const router = createStaticRouter(handler.dataRoutes, context);
-  const helmetContext: { helmet?: any } = {};
 
-  const App = (
+  const stream = ReactDOMServer.renderToPipeableStream(
     <React.StrictMode>
-      <HelmetProvider context={helmetContext}>
-        <QueryClientProvider client={queryClient}>
-          <StaticRouterProvider router={router} context={context} />
-        </QueryClientProvider>
-      </HelmetProvider>
-    </React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <StaticRouterProvider
+          router={router}
+          context={context}
+          nonce="nonce"
+        />
+      </QueryClientProvider>
+    </React.StrictMode>,
+    options
   );
 
-  const { pipe } = ReactDOMServer.renderToPipeableStream(App, {
-    bootstrapScripts: ['/entry-client.js'],
-    onShellReady() {
-      // # atualizado: Lógica de streaming simplificada e corrigida
-      res.statusCode = 200;
-      res.setHeader('Content-type', 'text/html');
-
-      const dehydratedState = dehydrate(queryClient);
-      const { helmet } = helmetContext;
-
-      const head = `${helmet.title.toString()}${helmet.meta.toString()}${helmet.link.toString()}`;
-
-      // Substitui os placeholders no template
-      const htmlStart = template
-        .replace(``, head)
-        .replace(
-          ``,
-          `<div id="root">`
-        )
-        .replace(
-            '</body>',
-            `<script>window.__DEHYDRATED_STATE__ = ${JSON.stringify(dehydratedState)};</script></body>`
-        );
-        
-      // Envia o início do HTML antes do conteúdo do React
-      res.write(htmlStart.split('</div>')[0] + '</div>');
-      
-      // Conecta o stream do React ao stream da resposta
-      pipe(res);
-    },
-    onError(error) {
-      console.error('Erro de Stream:', error);
-      res.statusCode = 500;
-      res.setHeader('Content-type', 'text/html');
-      res.send('<h1>Algo deu errado no servidor.</h1>');
-    },
-  });
+  return { pipe: stream.pipe, abort: stream.abort };
 }

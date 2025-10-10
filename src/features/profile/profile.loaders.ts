@@ -1,9 +1,9 @@
 import { redirect, defer } from 'react-router-dom'; // # atualizado
-import { toastErrorClickable } from '../../components/ui/toast';
-import { queryClient } from '../../lib/queryClient';
-import { getCurrentUser } from '../../services/auth';
+import { toastErrorClickable } from '@/components/ui/toast';
+import { queryClient } from '@/lib/queryClient';
+import { getCurrentUser } from '@/services/auth';
 import { userByNicknameQuery, userQuery } from '../users/user.queries';
-import { PATHS } from '../../router/paths';
+import { PATHS } from '@/router/paths';
 
 // # atualizado: Loader de perfil público agora usa defer
 export const profileLoader = async ({ params }: any) => {
