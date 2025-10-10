@@ -2,70 +2,76 @@ import { defer, redirect } from "react-router-dom";
 import { PATHS } from "@/router/paths";
 import { awaitAuthReady } from "@/services/auth";
 import { authStore } from "@/stores/authStore";
-import { queryClient } from "@/lib/queryClient"; // # atualizado: Importa queryClient
-import { userQuery } from "@/features/users/user.queries"; // # atualizado: Importa userQuery
-import { getPendingRequestCount } from "@/services/firestore"; // # atualizado: Importa a contagem
+import { queryClient } from "@/lib/queryClient";
+import { userQuery } from "@/features/users/user.queries";
+import { getPendingRequestCount } from "@/services/firestore";
+import { User } from "@/models";
 
-// # atualizado: Loader unificado para rotas públicas
+// Loader para rotas que só podem ser acessadas por usuários deslogados
 export const publicOnlyLoader = async () => {
-  // 1. Lógica para o Servidor (SSR)
-  // No servidor, lemos diretamente da store que já foi preenchida
+  // No servidor, a verificação é instantânea a partir da store
   if (import.meta.env.SSR) {
-    const user = authStore.getState().user;
-    if (user) {
+    if (authStore.getState().profile) {
       return redirect(PATHS.HOME);
     }
     return null;
   }
-
-  // 2. Lógica para o Cliente (Navegação)
-  // Para cliques após o app carregar, a store já está sincronizada.
-  // Esta verificação síncrona é instantânea e resolve o "engasgo".
-  const userInStore = authStore.getState().user;
-  if (userInStore) {
-    return redirect(PATHS.HOME);
-  }
-
-  // 3. Fallback para o carregamento inicial do cliente
-  // Se a store ainda estiver vazia (caso raro), esperamos a verificação inicial.
+  
+  // No cliente, esperamos a confirmação do Firebase
   const user = await awaitAuthReady();
   if (user) {
     return redirect(PATHS.HOME);
   }
-
   return null;
 };
 
+// Loader principal da aplicação, executado em todas as rotas
 export const rootLoader = async () => {
-  // --- LÓGICA DO SERVIDOR (SSR) ---
+  // --- LÓGICA DO SERVIDOR (PARA SSR RÁPIDO) ---
   if (import.meta.env.SSR) {
-    const user = authStore.getState().user;
-    if (!user) {
-      return { user: null, userProfile: null, initialFriendRequests: 0 };
+    const profile = authStore.getState().profile;
+
+    // Se não há perfil na store do servidor, não há usuário logado.
+    if (!profile) {
+      return { user: null, profile: null, initialFriendRequests: 0 };
     }
-    // No servidor, ADIAMOS (defer) o carregamento do perfil e das solicitações
-    // para não bloquear o streaming.
-    const userProfilePromise = queryClient.ensureQueryData(userQuery(user.uid));
-    const friendRequestsPromise = getPendingRequestCount(user.uid);
+    
+    // Se há perfil, ADIAMOS (defer) o carregamento dos dados secundários
+    // para não bloquear o streaming. Isso é a chave para o TTFB baixo.
+    const friendRequestsPromise = getPendingRequestCount(profile.id);
     
     return defer({
-      user,
-      userProfile: userProfilePromise,
+      user: null, // O user (firebase) não é serializável, usamos o profile
+      profile,
       initialFriendRequests: friendRequestsPromise,
     });
   }
 
-  // --- LÓGICA DO CLIENTE ---
-  const user = await awaitAuthReady();
-  if (!user) {
-    return { user: null, userProfile: null, initialFriendRequests: 0 };
+  // --- LÓGICA DO CLIENTE (PARA NAVEGAÇÃO E HIDRATAÇÃO) ---
+  const firebaseUser = await awaitAuthReady();
+  
+  // Se não há usuário do firebase, limpa a store e retorna nulo
+  if (!firebaseUser) {
+    authStore.getState().clearAuth();
+    return { user: null, profile: null, initialFriendRequests: 0 };
   }
 
-  // No cliente, fazemos o mesmo que o layoutLoader fazia.
-  const [userProfile, initialFriendRequests] = await Promise.all([
-    queryClient.ensureQueryData(userQuery(user.uid)),
-    getPendingRequestCount(user.uid)
-  ]);
-  
-  return { user, userProfile, initialFriendRequests };
+  // Se há usuário, busca o perfil e os dados do layout
+  try {
+    const [profile, initialFriendRequests] = await Promise.all([
+      queryClient.ensureQueryData(userQuery(firebaseUser.uid)),
+      getPendingRequestCount(firebaseUser.uid)
+    ]);
+
+    // Sincroniza a store com os dados frescos
+    authStore.getState().setUser(firebaseUser);
+    authStore.getState().setProfile(profile as User);
+    
+    return { user: firebaseUser, profile, initialFriendRequests };
+
+  } catch (error) {
+    console.error("Erro no rootLoader do cliente:", error);
+    authStore.getState().clearAuth();
+    return { user: null, profile: null, initialFriendRequests: 0 };
+  }
 };
